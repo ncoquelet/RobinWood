@@ -63,14 +63,14 @@ flowchart
 flowchart
 
   expl([Producteur])
-  trans([Producteur / Transformateur / Negociant])
+  other([Producteur / Transformateur / Negociant])
   any([Public])
 
-  labl[Lable]
-  arbre[Arbre]
+  labl["fa:fa-lock Lable"]
+  arbre[fa:fa-lock Arbre]
 
   expl -->|"mint(tree, label)"| arbre
-  trans -->|"transfer(tree, operator)"| arbre -.->|"arbre"| trans
+  other -->|"transfer(tree, operator)"| arbre -.->|"arbre"| other
   any -->|"verify(operator,arbre)"| arbre
   arbre -->|"verify(operator,label)"| labl
 
@@ -90,17 +90,40 @@ flowchart
 flowchart
 
   trans([Transformateur])
-  trans([Producteur / Transformateur / Negociant])
+  other([Transformateur / Negociant / Fabriquant])
+  any([Public])
+
+  arbre[Arbre]
+  byprod[Byproduct]
+
+  trans -->|"mint(byprod, tree)"| byprod
+  other -->|"transfer(byproduct, operator)"| byprod -.->|"byproduct"| other
+  any -->|"verify(operator,byproduct)"| byprod
+  byprod -->|"verify(operator,arbre)"| arbre
+  byprod -->|"burn(operator,arbre)"| arbre
+
+  linkStyle 0,4,5 stroke:green;
+
+```
+
+### Contrat Produit Final
+
+```mermaid
+flowchart
+
+  fab([Fabriquant])
+  other([Fabriquant / Distributeur])
   any([Public])
 
   byprod[Byproduct]
-  arbre[Arbre]
+  product[Product]
 
-  trans -->|"mint(deriv, tree)"| arbre
-  trans -->|"transfer(tree, operator)"| arbre -.->|"arbre"| trans
-  any -->|"verify(operator,arbre)"| arbre
-  arbre -->|"verify(operator,label)"| labl
+  fab -->|"mint(product, byproduct[])"| product
+  other -->|"transfer(product, operator)"| product -.->|"product"| other
+  any -->|"verify(operator,product)"| product
+  product -->|"verify(operator,byproduct)"| byprod
+  product -->|"burn(operator,byproduct)"| byprod
 
-  linkStyle 0,4 stroke:green;
+  linkStyle 0,4,5 stroke:green;
 
 ```

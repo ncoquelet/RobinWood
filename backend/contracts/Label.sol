@@ -6,14 +6,14 @@ import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Burnable.sol";
 
-contract RobinWood is Ownable, ERC721URIStorage {
+contract Label is Ownable, ERC721URIStorage {
   uint256 private _nextTokenId;
   mapping(uint256 => bool) allowedLabels;
 
   event LabelSubmitted(address indexed owner, uint256 tokenId);
   event LabelAllowed(uint256 indexed tokenId, bool allowed);
 
-  constructor() Ownable(msg.sender) ERC721("RobinWood", "WOD") {}
+  constructor() Ownable(msg.sender) ERC721("RobinWood Labels", "RWL") {}
 
   function submitLabel(string calldata tokenURI) external {
     uint256 tokenId = _nextTokenId++;

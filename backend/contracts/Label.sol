@@ -13,6 +13,8 @@ contract Label is Ownable, ERC721URIStorage {
   event LabelSubmitted(address indexed owner, uint256 tokenId);
   event LabelAllowed(uint256 indexed tokenId, bool allowed);
 
+  error UnknownLabel(uint256 tokenId);
+
   constructor() Ownable(msg.sender) ERC721("RobinWood Labels", "RWL") {}
 
   function submitLabel(string calldata tokenURI) external {
@@ -30,6 +32,9 @@ contract Label is Ownable, ERC721URIStorage {
   }
 
   function allowLabel(uint256 _tokenId, bool allowed) external onlyOwner {
+    if (_ownerOf(_tokenId) == address(0)) {
+      revert UnknownLabel(_tokenId);
+    }
     allowedLabels[_tokenId] = allowed;
     emit LabelAllowed(_tokenId, allowed);
   }

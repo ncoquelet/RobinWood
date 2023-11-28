@@ -28,13 +28,13 @@ describe('contract', function () {
 
       await expect(rwd.connect(cert1).submitLabel('new label'))
         .to.emit(rwd, 'LabelSubmitted')
-        .withArgs(0, cert1.address);
+        .withArgs(cert1.address, 0);
 
       expect(await rwd.ownerOf(0)).to.be.equals(cert1.address);
 
       await expect(rwd.connect(cert2).submitLabel('second label'))
         .to.emit(rwd, 'LabelSubmitted')
-        .withArgs(1, cert2.address);
+        .withArgs(cert2.address, 1);
 
       expect(await rwd.ownerOf(1)).to.be.equals(cert2.address);
     });

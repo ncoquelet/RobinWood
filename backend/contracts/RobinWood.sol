@@ -9,7 +9,7 @@ import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Burnable.sol";
 contract RobinWood is Ownable, ERC721URIStorage {
   uint256 private _nextTokenId;
 
-  event LabelSubmitted(uint256 tokenId, address owner);
+  event LabelSubmitted(address indexed owner, uint256 tokenId);
 
   constructor() Ownable(msg.sender) ERC721("RobinWood", "WOD") {}
 
@@ -18,6 +18,6 @@ contract RobinWood is Ownable, ERC721URIStorage {
     _mint(msg.sender, tokenId);
     _setTokenURI(tokenId, tokenURI);
 
-    emit LabelSubmitted(tokenId, msg.sender);
+    emit LabelSubmitted(msg.sender, tokenId);
   }
 }

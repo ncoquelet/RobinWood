@@ -1,0 +1,53 @@
+digraph G {
+  node [fontname = "Handlee";];
+  edge [fontname = "Handlee";];
+  
+  // personas
+  robin [label = "RobinWood";shape = oval;];
+  certif [label = "Certificateur";shape = oval;];
+  expl [label = "Producteur";shape = oval;];
+  nego [label = "Negociant";shape = oval;];
+  port [label = "Transporteur";shape = oval;];
+  trans [label = "Transformateur";shape = oval;];
+  fab [label = "Fabriquant";shape = oval;];
+  dist [label = "Distributeur";shape = oval;];
+  
+  // contracts
+  robinc [label = "RobinWood";shape = rect;];
+  labl [label = "Label";shape = rect;];
+  arbre [label = "Arbre";shape = rect;];
+  deriv [label = "Dérivé";shape = rect;];
+  produit [label = "Produit";shape = rect;];
+  
+  // certification
+  certif -> robinc [label = "request";];
+  robin -> robinc [label = "whitelist(certif)"];
+  certif -> labl [label = "whitelist(expl)";];
+
+  expl -> arbre [label = "mint";];
+
+  // arbre
+  labl -> arbre [label = "verify(expl)"; style = dashed; dir=back ];
+  robinc -> labl [label = "verify(certif)"; style = dashed; dir=back];
+  
+  expl -> arbre [label = "transfert";];
+
+  // dérivé
+
+  trans -> deriv [label = "mint";];
+  trans -> deriv [label = "transfert";];
+  // arbre -> trans [ label = ""; style="dotted" ]
+  arbre -> deriv [label = "verify(arbre)"; style = dashed; dir=back];
+  
+  nego -> arbre [label = "transfert";];
+  
+  fab -> produit [label = "mint";];
+  deriv -> produit [label = "verify(dérivé)"; style = dashed; dir=back];
+  
+  nego -> deriv [label = "transfert";];
+  
+  fab -> produit [label = "transfert";];
+
+  { rank=source; robin, certif, expl, nego, port, trans, fab, dist } 
+  { rank=same; robinc, labl, arbre, deriv, produit }
+}

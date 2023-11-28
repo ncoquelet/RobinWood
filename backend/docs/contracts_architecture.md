@@ -5,7 +5,7 @@
 ```mermaid
 flowchart LR
 
-  robin([RobinWood])
+  robin([Administrateur])
   certif([Certificateur])
   expl([Producteur])
   trans([Transformateur])
@@ -216,4 +216,27 @@ flowchart
 | ------------------------------ | --------------------- |
 | mapping(address => product_id) | Owner of a product_id |
 
-## Gestion du transport
+## Gestion des transferts
+
+Dans la description fait au dessus, un `Arbre`, un `Byproduct` ou un `Product` peut être transféré entre different actueur.
+
+Dans la vrai vie, ce transfert se fera toujours par l'intermédiaire d'un transporteur, voici une proposition pour permettre de faire ce transfert sans que le transporteur devienne le propriétaire de la marchandise.
+
+Marchandise = un `Arbre`, un `Byproduct` ou un `Product`
+
+Un transporteur peut être amené à transporter n'importe quel type de produit :
+
+```mermaid
+flowchart
+
+  expl([Producteur])
+  trans([Transformateur])
+  port([Transporteur])
+
+  arbre[Arbre]
+
+  expl -->|"approve(tree,carrier)"| arbre
+  port -->|"deliver(merchandise,operator)"| merch
+
+```
+

@@ -48,23 +48,34 @@ describe('contract', function () {
       expect(await rwd.isAccepted(0)).to.be.false
     })
 
-    it('Should admin accept new label', async () => {
-      const { rwd, cert1 } = await loadFixture(deployContract)
-
-      await rwd.connect(cert1).submitLabel('new label')
-
-      expect(await rwd.acceptLabel(0)).to.emit(rwd, 'LabelAccepted')
-      expect(await rwd.isAccepted(0)).to.be.true
-    })
-
     it('Should only admin can accept label', async () => {
       const { rwd, cert1 } = await loadFixture(deployContract)
 
       await rwd.connect(cert1).submitLabel('new label')
 
       await expect(
-        rwd.connect(cert1).acceptLabel(0)
+        rwd.connect(cert1).acceptLabel(0, true)
       ).to.be.revertedWithCustomError(rwd, 'OwnableUnauthorizedAccount')
+    })
+
+    it('Should admin accept new label', async () => {
+      const { rwd, cert1 } = await loadFixture(deployContract)
+
+      await rwd.connect(cert1).submitLabel('new label')
+
+      expect(await rwd.acceptLabel(0, true)).to.emit(rwd, 'LabelAccepted')
+      expect(await rwd.isAccepted(0)).to.be.true
+    })
+
+    it('Should admin disallow a label', async () => {
+      const { rwd, cert1 } = await loadFixture(deployContract)
+
+      await rwd.connect(cert1).submitLabel('new label')
+      expect(await rwd.acceptLabel(0, true)).to.emit(rwd, 'LabelAccepted')
+      expect(await rwd.isAccepted(0)).to.be.true
+
+      expect(await rwd.acceptLabel(0, false)).to.emit(rwd, 'LabelDisallowed')
+      expect(await rwd.isAccepted(0)).to.be.false
     })
   })
 })

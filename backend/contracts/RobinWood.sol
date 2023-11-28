@@ -26,7 +26,7 @@ contract RobinWood is Ownable, ERC721URIStorage {
     return acceptedLabels[_tokenId];
   }
 
-  function acceptLabel(uint256 _tokenId) external onlyOwner {
-    acceptedLabels[_tokenId] = true;
+  function acceptLabel(uint256 _tokenId, bool allowed) external onlyOwner {
+    acceptedLabels[_tokenId] = allowed;
   }
 }

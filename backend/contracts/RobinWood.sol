@@ -8,9 +8,10 @@ import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Burnable.sol";
 
 contract RobinWood is Ownable, ERC721URIStorage {
   uint256 private _nextTokenId;
-  mapping(uint256 => bool) acceptedLabels;
+  mapping(uint256 => bool) allowedLabels;
 
   event LabelSubmitted(address indexed owner, uint256 tokenId);
+  event LabelAllowed(uint256 indexed tokenId, bool allowed);
 
   constructor() Ownable(msg.sender) ERC721("RobinWood", "WOD") {}
 
@@ -20,13 +21,16 @@ contract RobinWood is Ownable, ERC721URIStorage {
     _setTokenURI(tokenId, tokenURI);
 
     emit LabelSubmitted(msg.sender, tokenId);
+    // by default emit an not allowed event to enable to list not allowed labels
+    emit LabelAllowed(tokenId, false);
   }
 
-  function isAccepted(uint256 _tokenId) external view returns (bool) {
-    return acceptedLabels[_tokenId];
+  function isAllowed(uint256 _tokenId) external view returns (bool) {
+    return allowedLabels[_tokenId];
   }
 
-  function acceptLabel(uint256 _tokenId, bool allowed) external onlyOwner {
-    acceptedLabels[_tokenId] = allowed;
+  function allowLabel(uint256 _tokenId, bool allowed) external onlyOwner {
+    allowedLabels[_tokenId] = allowed;
+    emit LabelAllowed(_tokenId, allowed);
   }
 }

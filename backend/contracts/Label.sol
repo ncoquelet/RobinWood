@@ -17,10 +17,10 @@ contract Label is Ownable, ERC721URIStorage {
 
   constructor() Ownable(msg.sender) ERC721("RobinWood Labels", "RWL") {}
 
-  function submitLabel(string calldata tokenURI) external {
+  function submitLabel(string calldata _tokenURI) external {
     uint256 tokenId = _nextTokenId++;
     _mint(msg.sender, tokenId);
-    _setTokenURI(tokenId, tokenURI);
+    _setTokenURI(tokenId, _tokenURI);
 
     emit LabelSubmitted(msg.sender, tokenId);
     // by default emit an not allowed event to enable to list not allowed labels

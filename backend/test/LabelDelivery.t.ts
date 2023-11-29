@@ -41,7 +41,7 @@ describe('LabelDelivery contract', function () {
   })
 
   describe('Label', function () {
-    it('Should revert if certifier don\'t own the label', async () => {
+    it("Should revert if certifier don't own the label", async () => {
       const { labelC, labelDeliveryC, owner, cert1, cert2, prod1, prod2, pub } =
         await loadFixture(deployContract)
 
@@ -49,7 +49,7 @@ describe('LabelDelivery contract', function () {
       await labelC.allowLabel(LABEL_1.id, true)
 
       await expect(
-        labelDeliveryC.connect(cert1).certify(prod1.address, LABEL_1.id)
+        labelDeliveryC.connect(cert1).certify(prod1, LABEL_1.id)
       ).to.be.revertedWithCustomError(labelDeliveryC, 'NotAllowedLabel')
     })
 
@@ -60,7 +60,7 @@ describe('LabelDelivery contract', function () {
       await labelC.connect(cert1).submitLabel('new label')
 
       await expect(
-        labelDeliveryC.connect(cert1).certify(prod1.address, LABEL_1.id)
+        labelDeliveryC.connect(cert1).certify(prod1, LABEL_1.id)
       ).to.be.revertedWithCustomError(labelDeliveryC, 'NotAllowedLabel')
     })
 
@@ -68,25 +68,52 @@ describe('LabelDelivery contract', function () {
       const { labelDeliveryC, owner, cert1, cert2, prod1, prod2, pub } =
         await loadFixture(withAllowedCertifierLabel)
 
-      await expect(
-        labelDeliveryC.connect(cert1).certify(prod1.address, LABEL_1.id)
-      )
+      await expect(labelDeliveryC.connect(cert1).certify(prod1, LABEL_1.id))
         .to.be.emit(labelDeliveryC, 'Certified')
-        .withArgs(cert1.address, prod1.address, LABEL_1.id)
+        .withArgs(prod1.address, LABEL_1.id, true)
 
-      expect(await labelDeliveryC.balanceOf(prod1, LABEL_1.id)).to.be.equals(1)
       expect(await labelDeliveryC.isCertified(prod1, LABEL_1.id)).to.be.true
+      expect(await labelDeliveryC.balanceOf(prod1, LABEL_1.id)).to.be.equals(1)
     })
 
     it('Should certify productor only once by label', async () => {
       const { labelDeliveryC, owner, cert1, cert2, prod1, prod2, pub } =
         await loadFixture(withAllowedCertifierLabel)
 
-      await labelDeliveryC.connect(cert1).certify(prod1.address, LABEL_1.id)
-      await labelDeliveryC.connect(cert1).certify(prod1.address, LABEL_1.id)
+      await labelDeliveryC.connect(cert1).certify(prod1, LABEL_1.id)
+      await labelDeliveryC.connect(cert1).certify(prod1, LABEL_1.id)
 
-      expect(await labelDeliveryC.balanceOf(prod1, LABEL_1.id)).to.be.equals(1)
       expect(await labelDeliveryC.isCertified(prod1, LABEL_1.id)).to.be.true
+      expect(await labelDeliveryC.balanceOf(prod1, LABEL_1.id)).to.be.equals(1)
+    })
+
+    it('Should return false to non certified productor', async () => {
+      const { labelDeliveryC, owner, cert1, cert2, prod1, prod2, pub } =
+        await loadFixture(withAllowedCertifierLabel)
+
+      expect(await labelDeliveryC.isCertified(prod1, LABEL_1.id)).to.be.false
+      expect(await labelDeliveryC.balanceOf(prod1, LABEL_1.id)).to.be.equals(0)
+    })
+
+    it('Should revoke productor certification', async () => {
+      const { labelDeliveryC, owner, cert1, cert2, prod1, prod2, pub } =
+        await loadFixture(withAllowedCertifierLabel)
+
+      await labelDeliveryC.connect(cert1).certify(prod1, LABEL_1.id)
+      await expect(labelDeliveryC.connect(cert1).revoke(prod1, LABEL_1.id))
+        .to.be.emit(labelDeliveryC, 'Certified')
+        .withArgs(prod1.address, LABEL_1.id, false)
+      expect(await labelDeliveryC.isCertified(prod1, LABEL_1.id)).to.be.false
+    })
+
+    it("Shouldn't emit event when revoke uncertified productor", async () => {
+      const { labelDeliveryC, owner, cert1, cert2, prod1, prod2, pub } =
+        await loadFixture(withAllowedCertifierLabel)
+
+      await expect(
+        labelDeliveryC.connect(cert1).revoke(prod1, LABEL_1.id)
+      ).to.be.not.emit(labelDeliveryC, 'Certified')
+      expect(await labelDeliveryC.isCertified(prod1, LABEL_1.id)).to.be.false
     })
   })
 })

@@ -2,6 +2,7 @@
 pragma solidity 0.8.20;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Burnable.sol";
@@ -14,6 +15,7 @@ contract Label is Ownable, ERC721URIStorage {
   event LabelAllowed(uint256 indexed tokenId, bool allowed);
 
   error UnknownLabel(uint256 tokenId);
+  error NotTransferable(address actor);
 
   constructor() Ownable(msg.sender) ERC721("RobinWood Labels", "RWL") {}
 
@@ -41,5 +43,11 @@ contract Label is Ownable, ERC721URIStorage {
     }
     allowedLabels[_tokenId] = _allowed;
     emit LabelAllowed(_tokenId, _allowed);
+  }
+
+  // ---------- override to avoid transfer --------
+
+  function transferFrom(address from, address to, uint256 tokenId) public view override(ERC721, IERC721) {
+    revert NotTransferable(msg.sender);
   }
 }

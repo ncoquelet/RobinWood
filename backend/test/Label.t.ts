@@ -130,4 +130,40 @@ describe('contract', function () {
         .withArgs(UNKNOWN_LABEL_ID)
     })
   })
+
+  describe('Transferable', function () {
+    it('Shoul revert on transfer', async () => {
+      const { labelC, cert1, cert2 } = await loadFixture(deployContract)
+
+      await labelC.connect(cert1).submitLabel('new label')
+      await labelC.allowLabel(LABEL_1.id, true)
+      await expect(labelC.connect(cert1).transferFrom(cert1, cert2, LABEL_1.id))
+        .to.be.revertedWithCustomError(labelC, 'NotTransferable')
+        .withArgs(cert1.address)
+    })
+
+    it('Shoul revert on safe transfer', async () => {
+      const { labelC, cert1, cert2 } = await loadFixture(deployContract)
+
+      await labelC.connect(cert1).submitLabel('new label')
+      await labelC.allowLabel(LABEL_1.id, true)
+      await expect(
+        labelC.connect(cert1)['safeTransferFrom(address,address,uint256)'](cert1, cert2, LABEL_1.id)
+      )
+        .to.be.revertedWithCustomError(labelC, 'NotTransferable')
+        .withArgs(cert1.address)
+    })
+
+    it('Shoul revert on transfer', async () => {
+      const { labelC, cert1, cert2 } = await loadFixture(deployContract)
+
+      await labelC.connect(cert1).submitLabel('new label')
+      await labelC.allowLabel(LABEL_1.id, true)
+      await expect(
+        labelC.connect(cert1)['safeTransferFrom(address,address,uint256,bytes)'](cert1, cert2, LABEL_1.id, '0x')
+      )
+        .to.be.revertedWithCustomError(labelC, 'NotTransferable')
+        .withArgs(cert1.address)
+    })
+  })
 })

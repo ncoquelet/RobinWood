@@ -117,7 +117,7 @@ describe('LabelDelivery contract', function () {
     })
   })
 
-  describe('Trasnferable', function () {
+  describe('Transferable', function () {
     it('Shoul revert on transfer', async () => {
       const { labelDeliveryC, owner, cert1, cert2, prod1, prod2, pub } =
         await loadFixture(withAllowedCertifierLabel)

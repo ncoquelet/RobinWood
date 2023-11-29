@@ -7,7 +7,7 @@ import "./Label.sol";
 contract LabelDelivery is ERC1155 {
   Label internal label;
 
-  event Certified(address indexed actor, uint256 labelId, bool certified);
+  event Certified(address indexed actor, uint256 indexed labelId, bool certified);
 
   error NotAllowedLabel();
 

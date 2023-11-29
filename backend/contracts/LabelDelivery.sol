@@ -10,6 +10,7 @@ contract LabelDelivery is ERC1155 {
   event Certified(address indexed actor, uint256 indexed labelId, bool certified);
 
   error NotAllowedLabel();
+  error NotTransferable(address actor);
 
   // ---------- modifier ----------
 
@@ -42,5 +43,15 @@ contract LabelDelivery is ERC1155 {
 
   function isCertified(address _actor, uint256 _labelId) external view returns (bool) {
     return balanceOf(_actor, _labelId) > 0;
+  }
+
+  // ---------- override to avoid transfer --------
+
+  function safeTransferFrom(address from, address to, uint256 id, uint256 value, bytes memory data) public view override {
+    revert NotTransferable(msg.sender);
+  }
+
+  function safeBatchTransferFrom(address from, address to, uint256[] memory ids, uint256[] memory values, bytes memory data) public view override {
+    revert NotTransferable(msg.sender);
   }
 }

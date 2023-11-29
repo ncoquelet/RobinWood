@@ -116,4 +116,34 @@ describe('LabelDelivery contract', function () {
       expect(await labelDeliveryC.isCertified(prod1, LABEL_1.id)).to.be.false
     })
   })
+
+  describe('Trasnferable', function () {
+    it('Shoul revert on transfer', async () => {
+      const { labelDeliveryC, owner, cert1, cert2, prod1, prod2, pub } =
+        await loadFixture(withAllowedCertifierLabel)
+
+      await labelDeliveryC.connect(cert1).certify(prod1, LABEL_1.id)
+      await expect(
+        labelDeliveryC
+          .connect(prod1)
+          .safeTransferFrom(prod1, prod2, LABEL_1.id, 1, '0x')
+      )
+        .to.be.revertedWithCustomError(labelDeliveryC, 'NotTransferable')
+        .withArgs(prod1.address)
+    })
+
+    it('Shoul revert on batch transfer', async () => {
+      const { labelDeliveryC, owner, cert1, cert2, prod1, prod2, pub } =
+        await loadFixture(withAllowedCertifierLabel)
+
+      await labelDeliveryC.connect(cert1).certify(prod1, LABEL_1.id)
+      await expect(
+        labelDeliveryC
+          .connect(prod1)
+          .safeBatchTransferFrom(prod1, prod2, [LABEL_1.id], [1], '0x')
+      )
+        .to.be.revertedWithCustomError(labelDeliveryC, 'NotTransferable')
+        .withArgs(prod1.address)
+    })
+  })
 })

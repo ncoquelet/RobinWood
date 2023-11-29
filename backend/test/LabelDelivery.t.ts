@@ -5,6 +5,8 @@ import { loadFixture } from '@nomicfoundation/hardhat-network-helpers'
 import {
   deployLabelDeliveryContract,
   withAllowedCertifierLabel,
+  withCertifiedProductor,
+  withNotAllowedCertifierLabel,
 } from './utils/fixtures'
 import { LABEL_1 } from './utils/constants'
 
@@ -20,21 +22,16 @@ describe('LabelDelivery contract', function () {
   describe('Label', function () {
     it("Should revert if certifier don't own the label", async () => {
       const { labelC, labelDeliveryC, owner, cert1, cert2, prod1, prod2, pub } =
-        await loadFixture(deployLabelDeliveryContract)
-
-      await labelC.connect(cert2).submitLabel('new label')
-      await labelC.allowLabel(LABEL_1.id, true)
+        await loadFixture(withAllowedCertifierLabel)
 
       await expect(
-        labelDeliveryC.connect(cert1).certify(prod1, LABEL_1.id)
+        labelDeliveryC.connect(cert2).certify(prod1, LABEL_1.id)
       ).to.be.revertedWithCustomError(labelDeliveryC, 'NotAllowedLabel')
     })
 
     it('Should revert if label not allowed for certifier', async () => {
       const { labelC, labelDeliveryC, owner, cert1, cert2, prod1, prod2, pub } =
-        await loadFixture(deployLabelDeliveryContract)
-
-      await labelC.connect(cert1).submitLabel('new label')
+        await loadFixture(withNotAllowedCertifierLabel)
 
       await expect(
         labelDeliveryC.connect(cert1).certify(prod1, LABEL_1.id)
@@ -55,9 +52,8 @@ describe('LabelDelivery contract', function () {
 
     it('Should certify productor only once by label', async () => {
       const { labelDeliveryC, owner, cert1, cert2, prod1, prod2, pub } =
-        await loadFixture(withAllowedCertifierLabel)
+        await loadFixture(withCertifiedProductor)
 
-      await labelDeliveryC.connect(cert1).certify(prod1, LABEL_1.id)
       await labelDeliveryC.connect(cert1).certify(prod1, LABEL_1.id)
 
       expect(await labelDeliveryC.isCertified(prod1, LABEL_1.id)).to.be.true
@@ -74,9 +70,8 @@ describe('LabelDelivery contract', function () {
 
     it('Should revoke productor certification', async () => {
       const { labelDeliveryC, owner, cert1, cert2, prod1, prod2, pub } =
-        await loadFixture(withAllowedCertifierLabel)
+        await loadFixture(withCertifiedProductor)
 
-      await labelDeliveryC.connect(cert1).certify(prod1, LABEL_1.id)
       await expect(labelDeliveryC.connect(cert1).revoke(prod1, LABEL_1.id))
         .to.be.emit(labelDeliveryC, 'Certified')
         .withArgs(prod1.address, LABEL_1.id, false)
@@ -97,9 +92,8 @@ describe('LabelDelivery contract', function () {
   describe('Transferable', function () {
     it('Shoul revert on transfer', async () => {
       const { labelDeliveryC, owner, cert1, cert2, prod1, prod2, pub } =
-        await loadFixture(withAllowedCertifierLabel)
+        await loadFixture(withCertifiedProductor)
 
-      await labelDeliveryC.connect(cert1).certify(prod1, LABEL_1.id)
       await expect(
         labelDeliveryC
           .connect(prod1)
@@ -111,9 +105,8 @@ describe('LabelDelivery contract', function () {
 
     it('Shoul revert on batch transfer', async () => {
       const { labelDeliveryC, owner, cert1, cert2, prod1, prod2, pub } =
-        await loadFixture(withAllowedCertifierLabel)
+        await loadFixture(withCertifiedProductor)
 
-      await labelDeliveryC.connect(cert1).certify(prod1, LABEL_1.id)
       await expect(
         labelDeliveryC
           .connect(prod1)

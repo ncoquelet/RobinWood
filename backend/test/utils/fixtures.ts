@@ -37,3 +37,23 @@ export async function withAllowedCertifierLabel() {
 
   return deployed
 }
+
+export async function withNotAllowedCertifierLabel() {
+  const deployed = await deployLabelDeliveryContract()
+
+  const { labelC, cert1 } = deployed
+
+  await labelC.connect(cert1).submitLabel('new label')
+
+  return deployed
+}
+
+export async function withCertifiedProductor() {
+  const deployed = await withAllowedCertifierLabel()
+
+  const { labelDeliveryC, cert1, prod1 } = deployed
+
+  await labelDeliveryC.connect(cert1).certify(prod1, LABEL_1.id)
+
+  return deployed
+}

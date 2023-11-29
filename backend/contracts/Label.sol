@@ -4,15 +4,13 @@ pragma solidity 0.8.20;
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
-import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
-import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Burnable.sol";
 
 contract Label is Ownable, ERC721URIStorage {
   uint256 private _nextTokenId;
   mapping(uint256 => bool) allowedLabels;
 
   event LabelSubmitted(address indexed owner, uint256 tokenId);
-  event LabelAllowed(uint256 indexed tokenId, bool allowed);
+  event LabelAllowed(uint256 indexed tokenId, bool indexed allowed);
 
   error UnknownLabel(uint256 tokenId);
   error NotTransferable(address actor);

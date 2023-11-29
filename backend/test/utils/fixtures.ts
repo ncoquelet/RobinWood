@@ -28,7 +28,7 @@ export async function deployMerchandiseContract() {
 // ---------- with data ----------
 
 export async function withAllowedCertifierLabel() {
-  const deployed = await deployLabelDeliveryContract()
+  const deployed = await deployMerchandiseContract()
 
   const { labelC, cert1 } = deployed
 

@@ -15,11 +15,9 @@ const UNKNOWN_LABEL_ID = 999
 
 describe('contract', function () {
   async function deployContract() {
-    // Get the ContractFactory and Signers here.
-    const Label = await ethers.getContractFactory('Label')
     const [owner, cert1, cert2, prod1, prod2, pub] = await ethers.getSigners()
 
-    const labelC = await Label.deploy()
+    const labelC = await ethers.deployContract('Label')
 
     return { labelC, owner, cert1, cert2, prod1, prod2, pub }
   }
@@ -57,7 +55,7 @@ describe('contract', function () {
         .to.emit(labelC, 'LabelAllowed')
         .withArgs(LABEL_1.id, false)
 
-      expect(await labelC.isAllowed(LABEL_1.id)).to.be.false
+      expect(await labelC['isAllowed(uint256)'](LABEL_1.id)).to.be.false
     })
 
     it('Should only admin can accept label', async () => {
@@ -78,7 +76,7 @@ describe('contract', function () {
       await expect(labelC.allowLabel(LABEL_1.id, true))
         .to.emit(labelC, 'LabelAllowed')
         .withArgs(LABEL_1.id, true)
-      expect(await labelC.isAllowed(LABEL_1.id)).to.be.true
+      expect(await labelC['isAllowed(uint256)'](LABEL_1.id)).to.be.true
     })
 
     it('Should admin disallow a label', async () => {
@@ -88,22 +86,40 @@ describe('contract', function () {
       await expect(labelC.allowLabel(LABEL_1.id, true))
         .to.emit(labelC, 'LabelAllowed')
         .withArgs(LABEL_1.id, true)
-      expect(await labelC.isAllowed(LABEL_1.id)).to.be.true
+      expect(await labelC['isAllowed(uint256)'](LABEL_1.id)).to.be.true
 
       await expect(labelC.allowLabel(LABEL_1.id, false))
         .to.emit(labelC, 'LabelAllowed')
         .withArgs(LABEL_1.id, false)
-      expect(await labelC.isAllowed(LABEL_1.id)).to.be.false
+      expect(await labelC['isAllowed(uint256)'](LABEL_1.id)).to.be.false
     })
 
     it('Should verify if label is allowed', async () => {
       const { labelC, cert1, pub } = await loadFixture(deployContract)
 
-      expect(await labelC.connect(pub).isAllowed(UNKNOWN_LABEL_ID)).to.be.false
+      await labelC.connect(cert1).submitLabel('new label')
+      await labelC.allowLabel(LABEL_1.id, true)
+      expect(await labelC.connect(pub)['isAllowed(uint256)'](LABEL_1.id)).to.be
+        .true
+    })
+
+    it('Should verify if unkown label is disallowed by default', async () => {
+      const { labelC, cert1, pub } = await loadFixture(deployContract)
+
+      expect(await labelC.connect(pub)['isAllowed(uint256)'](UNKNOWN_LABEL_ID))
+        .to.be.false
+    })
+
+    it('Should verify if label is allowed for a certifier', async () => {
+      const { labelC, cert1, pub } = await loadFixture(deployContract)
 
       await labelC.connect(cert1).submitLabel('new label')
       await labelC.allowLabel(LABEL_1.id, true)
-      expect(await labelC.connect(pub).isAllowed(LABEL_1.id)).to.be.true
+      expect(
+        await labelC
+          .connect(pub)
+          ['isAllowed(uint256,address)'](LABEL_1.id, cert1.address)
+      ).to.be.true
     })
 
     it('Should revert if trying allowed unknown label', async () => {

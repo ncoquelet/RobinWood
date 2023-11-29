@@ -31,11 +31,15 @@ contract Label is Ownable, ERC721URIStorage {
     return allowedLabels[_tokenId];
   }
 
-  function allowLabel(uint256 _tokenId, bool allowed) external onlyOwner {
+  function isAllowed(uint256 _tokenId, address _to) external view returns (bool) {
+    return allowedLabels[_tokenId] && _ownerOf(_tokenId) == _to;
+  }
+
+  function allowLabel(uint256 _tokenId, bool _allowed) external onlyOwner {
     if (_ownerOf(_tokenId) == address(0)) {
       revert UnknownLabel(_tokenId);
     }
-    allowedLabels[_tokenId] = allowed;
-    emit LabelAllowed(_tokenId, allowed);
+    allowedLabels[_tokenId] = _allowed;
+    emit LabelAllowed(_tokenId, _allowed);
   }
 }

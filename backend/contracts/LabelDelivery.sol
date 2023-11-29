@@ -1,0 +1,31 @@
+// SPDX-License-Identifier: SEE LICENSE IN LICENSE
+pragma solidity 0.8.20;
+
+import "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
+import "./Label.sol";
+
+contract LabelDelivery is ERC1155 {
+  Label internal label;
+
+  event Certified(address certifier, address actor, uint256 labelId);
+
+  error NotAllowedLabel();
+
+  constructor(address _labelContract) ERC1155("") {
+    label = Label(_labelContract);
+  }
+
+  function certify(address _actor, uint256 _labelId) external {
+    if (!label.isAllowed(_labelId, msg.sender)) {
+      revert NotAllowedLabel();
+    }
+    if (balanceOf(_actor, _labelId) == 0) {
+      _mint(_actor, _labelId, 1, "");
+      emit Certified(msg.sender, _actor, _labelId);
+    }
+  }
+
+  function isCertified(address _actor, uint256 _labelId) external view returns (bool) {
+    return balanceOf(_actor, _labelId) >= 0;
+  }
+}

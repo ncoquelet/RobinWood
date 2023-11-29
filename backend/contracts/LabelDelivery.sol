@@ -47,11 +47,11 @@ contract LabelDelivery is ERC1155 {
 
   // ---------- override to avoid transfer --------
 
-  function safeTransferFrom(address from, address to, uint256 id, uint256 value, bytes memory data) public view override {
+  function safeTransferFrom(address /*from*/, address /*to*/, uint256 /*id*/, uint256 /*value*/, bytes memory /*data*/) public view override {
     revert NotTransferable(msg.sender);
   }
 
-  function safeBatchTransferFrom(address from, address to, uint256[] memory ids, uint256[] memory values, bytes memory data) public view override {
+  function safeBatchTransferFrom(address /*from*/, address /*to*/, uint256[] memory /*ids*/, uint256[] memory /*values*/, bytes memory /*data*/) public view override {
     revert NotTransferable(msg.sender);
   }
 }

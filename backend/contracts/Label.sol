@@ -47,7 +47,11 @@ contract Label is Ownable, ERC721URIStorage {
 
   // ---------- override to avoid transfer --------
 
-  function transferFrom(address from, address to, uint256 tokenId) public view override(ERC721, IERC721) {
+  function transferFrom(address /*from*/, address /*to*/, uint256 /*tokenId*/) public view override(ERC721, IERC721) {
+    revert NotTransferable(msg.sender);
+  }
+
+  function safeTransferFrom(address /*from*/, address /*to*/, uint256 /*tokenId*/, bytes memory /*data*/) public view override(ERC721, IERC721) {
     revert NotTransferable(msg.sender);
   }
 }

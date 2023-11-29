@@ -5,31 +5,77 @@ import { loadFixture } from '@nomicfoundation/hardhat-network-helpers'
 import {
   withAllowedCertifierLabel,
   withCertifiedProductor,
+  withCertifiedProductorAndMerchandise,
 } from './utils/fixtures'
-import { LABEL_1 } from './utils/constants'
+import { LABEL_1, MERCH_2_BOARD, MERCH_1_TREE } from './utils/constants'
 
 describe('Merchandise contract', function () {
-  describe('Mint Tree', () => {
-    it('Should mint tree as certified productor', async () => {
+  describe('Mint Merchandise', () => {
+    it('Should mint merchandise with label as certified productor', async () => {
       const { merchandiseC, prod1 } = await loadFixture(withCertifiedProductor)
 
       await expect(
-        merchandiseC.connect(prod1).mintMerchandise('New Tree', LABEL_1.id)
+        merchandiseC
+          .connect(prod1)
+          .mintWithLabel(MERCH_1_TREE.tokenUri, LABEL_1.id)
       )
-        .to.be.emit(merchandiseC, 'MerchandiseMinted')
-        .withArgs(prod1.address, 0)
+        .to.be.emit(merchandiseC, 'MintedWithLabel')
+        .withArgs(prod1.address, LABEL_1.id, MERCH_1_TREE.id)
+      expect(await merchandiseC.ownerOf(MERCH_1_TREE.id)).to.be.equals(
+        prod1.address
+      )
+      expect(await merchandiseC.tokenURI(MERCH_1_TREE.id)).to.be.equals(
+        MERCH_1_TREE.tokenUri
+      )
     })
 
-    it('Should revert mint tree as non certified productor', async () => {
+    it('Should revert mint merchandise with label as non certified productor', async () => {
       const { merchandiseC, prod1 } = await loadFixture(
         withAllowedCertifierLabel
       )
 
       await expect(
-        merchandiseC.connect(prod1).mintMerchandise('New Tree', LABEL_1.id)
+        merchandiseC.connect(prod1).mintWithLabel('New Tree', LABEL_1.id)
       )
         .to.be.revertedWithCustomError(merchandiseC, 'NotCertified')
-        .withArgs(prod1.address, 0)
+        .withArgs(prod1.address, LABEL_1.id)
+    })
+
+    it('Should mint merchandise with other merchandise I own ', async () => {
+      const { merchandiseC, prod1 } = await loadFixture(
+        withCertifiedProductorAndMerchandise
+      )
+
+      await expect(
+        merchandiseC
+          .connect(prod1)
+          .mintWithMerchandise(MERCH_2_BOARD.tokenUri, MERCH_1_TREE.id)
+      )
+        .to.be.emit(merchandiseC, 'MintedWithMerchandise')
+        .withArgs(prod1.address, MERCH_1_TREE.id, MERCH_2_BOARD.id)
+      expect(await merchandiseC.ownerOf(MERCH_2_BOARD.id)).to.be.equals(
+        prod1.address
+      )
+      expect(await merchandiseC.tokenURI(MERCH_2_BOARD.id)).to.be.equals(
+        MERCH_2_BOARD.tokenUri
+      )
+      await expect(
+        merchandiseC.ownerOf(MERCH_1_TREE.id)
+      ).to.be.revertedWithCustomError(merchandiseC, 'ERC721NonexistentToken')
+    })
+
+    it('Should revert mint merchandise with other merchandise if i not the owner', async () => {
+      const { merchandiseC, prod2 } = await loadFixture(
+        withCertifiedProductorAndMerchandise
+      )
+
+      await expect(
+        merchandiseC
+          .connect(prod2)
+          .mintWithMerchandise(MERCH_2_BOARD.tokenUri, MERCH_1_TREE.id)
+      )
+        .to.be.revertedWithCustomError(merchandiseC, 'NotOwner')
+        .withArgs(prod2.address, MERCH_1_TREE.id)
     })
   })
 })

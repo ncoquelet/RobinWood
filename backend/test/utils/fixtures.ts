@@ -57,3 +57,13 @@ export async function withCertifiedProductor() {
 
   return deployed
 }
+
+export async function withCertifiedProductorAndMerchandise() {
+  const deployed = await withCertifiedProductor()
+
+  const { merchandiseC, cert1, prod1 } = deployed
+
+  await merchandiseC.connect(prod1).mintWithLabel('New Tree', LABEL_1.id)
+
+  return deployed
+}

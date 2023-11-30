@@ -66,7 +66,7 @@ contract Merchandise is ERC721URIStorage {
 
   function mandateTransport(address by, address to, uint256 _merchandiseId) external {
     _requireOwnMerch(_merchandiseId);
-    if (by == msg.sender) {
+    if (by == msg.sender || to == msg.sender) {
       revert CantMandateOneself(msg.sender, _merchandiseId);
     }
 

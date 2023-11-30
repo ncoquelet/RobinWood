@@ -90,8 +90,21 @@ describe('Merchandise contract', function () {
           .connect(prod1)
           .mandateTransport(prod1, transf1, MERCH_1_TREE.id)
       )
-        .to.be.revertedWithCustomError(merchandiseC, 'CantMandateOneself')
-        .withArgs(prod1.address, MERCH_1_TREE.id)
+        .to.be.revertedWithCustomError(merchandiseC, 'ERC721InvalidApprover')
+        .withArgs(prod1.address)
+    })
+    it('Should revert if owner mandate 0x as transporter', async () => {
+      const { merchandiseC, prod1, transp1, transf1 } = await loadFixture(
+        withCertifiedProductorAndMerchandise
+      )
+
+      await expect(
+        merchandiseC
+          .connect(prod1)
+          .mandateTransport(ethers.ZeroAddress, transf1, MERCH_1_TREE.id)
+      )
+        .to.be.revertedWithCustomError(merchandiseC, 'ERC721InvalidApprover')
+        .withArgs(ethers.ZeroAddress)
     })
     it('Should revert if owner mandate itself as recipient', async () => {
       const { merchandiseC, prod1, transp1, transf1 } = await loadFixture(
@@ -103,8 +116,21 @@ describe('Merchandise contract', function () {
           .connect(prod1)
           .mandateTransport(transp1, prod1, MERCH_1_TREE.id)
       )
-        .to.be.revertedWithCustomError(merchandiseC, 'CantMandateOneself')
-        .withArgs(prod1.address, MERCH_1_TREE.id)
+        .to.be.revertedWithCustomError(merchandiseC, 'ERC721InvalidReceiver')
+        .withArgs(prod1.address)
+    })
+    it('Should revert if owner mandate 0x as recipient', async () => {
+      const { merchandiseC, prod1, transp1, transf1 } = await loadFixture(
+        withCertifiedProductorAndMerchandise
+      )
+
+      await expect(
+        merchandiseC
+          .connect(prod1)
+          .mandateTransport(transp1, ethers.ZeroAddress, MERCH_1_TREE.id)
+      )
+        .to.be.revertedWithCustomError(merchandiseC, 'ERC721InvalidReceiver')
+        .withArgs(ethers.ZeroAddress)
     })
 
     it('Should mandate transporter to transfer merch to recipient ', async () => {

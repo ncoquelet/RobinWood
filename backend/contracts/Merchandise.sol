@@ -9,10 +9,13 @@ contract Merchandise is ERC721URIStorage {
 
   uint256 private _nextTokenId;
 
+  enum MandateStatus {
+    CREATED, MANDATED, ACCEPTED, FULFILLED, VALIDATED
+  }
+
   struct Mandate {
     address to;
-    bool accepted;
-    bool validated;
+    MandateStatus status;
   }
 
   mapping(uint256 labelId => mapping(address transporter => Mandate)) mandates;
@@ -70,22 +73,22 @@ contract Merchandise is ERC721URIStorage {
   function acceptTransport(uint256 _merchandiseId) external {
     _requireMandated(_merchandiseId);
 
-    mandates[_merchandiseId][msg.sender].accepted = true;
+    mandates[_merchandiseId][msg.sender].status = MandateStatus.ACCEPTED;
     emit TransportAccepted(msg.sender, mandates[_merchandiseId][msg.sender].to, _merchandiseId);
   }
 
   function isMandateAccepted(uint256 _merchandiseId, address by) external view returns (bool) {
-    return mandates[_merchandiseId][by].accepted;
+    return mandates[_merchandiseId][by].status == MandateStatus.ACCEPTED;
   }
 
   function validateTransport(uint256 _merchandiseId, address by) external {
     _requireAccepted(_merchandiseId, by);
-    mandates[_merchandiseId][by].validated = true;
+    mandates[_merchandiseId][by].status = MandateStatus.VALIDATED;
     emit TransportValidated(by, msg.sender, _merchandiseId);
   }
 
   function isTransportValidated(uint256 _merchandiseId, address by) external view returns (bool) {
-    return mandates[_merchandiseId][by].validated;
+    return mandates[_merchandiseId][by].status == MandateStatus.VALIDATED;
   }
 
   // ---------- private --------
@@ -103,7 +106,7 @@ contract Merchandise is ERC721URIStorage {
   }
 
   function _requireAccepted(uint256 _merchandiseId, address by) internal view {
-    if (!mandates[_merchandiseId][by].accepted) {
+    if (mandates[_merchandiseId][by].status != MandateStatus.ACCEPTED) {
       revert NotAccepted(msg.sender, _merchandiseId);
     }
   }

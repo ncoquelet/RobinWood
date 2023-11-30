@@ -1,4 +1,5 @@
 import { ethers } from 'hardhat'
+import { LABEL_1 } from '../test/utils/constants'
 
 async function main() {
   console.log('Deploy contract')
@@ -12,6 +13,12 @@ async function main() {
   ])
   await labelDelivery.waitForDeployment()
   console.log(`LabelDelivery contract ${await labelDelivery.getAddress()}`)
+
+  const merchandise = await ethers.deployContract('Merchandise', [
+    labelDelivery.getAddress(),
+  ])
+  await merchandise.waitForDeployment()
+  console.log(`Merchandise contract ${await merchandise.getAddress()}`)
 
   const [
     owner,
@@ -50,6 +57,9 @@ async function main() {
   ).forEach((event) => {
     console.log(` - #${event.args.tokenId} : ${event.args.allowed}`)
   })
+
+  console.log('\nCertifier Productor')
+  await labelDelivery.certify(prod1, LABEL_1.id)
 }
 
 main()

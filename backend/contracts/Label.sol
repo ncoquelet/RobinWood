@@ -7,7 +7,7 @@ import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 
 contract Label is Ownable, ERC721URIStorage {
   uint256 private _nextTokenId;
-  mapping(uint256 => bool) allowedLabels;
+  mapping(uint256 labelId => bool) allowedLabels;
 
   event LabelSubmitted(address indexed owner, uint256 tokenId);
   event LabelAllowed(uint256 indexed tokenId, bool indexed allowed);

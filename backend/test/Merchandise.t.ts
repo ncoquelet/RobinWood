@@ -11,7 +11,7 @@ import { LABEL_1, MERCH_2_BOARD, MERCH_1_TREE } from './utils/constants'
 
 describe('Merchandise contract', function () {
   describe('Mint Merchandise', () => {
-    it('Should mint merchandise with label as certified productor', async () => {
+    it('Should mint new merchandise as a certified producer of a label', async () => {
       const { merchandiseC, prod1 } = await loadFixture(withCertifiedProductor)
 
       await expect(
@@ -29,7 +29,7 @@ describe('Merchandise contract', function () {
       )
     })
 
-    it('Should revert mint merchandise with label as non certified productor', async () => {
+    it('Should revert when mint new merchandise as a non certified producer of a label', async () => {
       const { merchandiseC, prod1 } = await loadFixture(
         withAllowedCertifierLabel
       )
@@ -41,7 +41,7 @@ describe('Merchandise contract', function () {
         .withArgs(prod1.address, LABEL_1.id)
     })
 
-    it('Should mint merchandise with other merchandise I own ', async () => {
+    it('Should mint new merchandise from other merchandise I own ', async () => {
       const { merchandiseC, prod1 } = await loadFixture(
         withCertifiedProductorAndMerchandise
       )
@@ -64,7 +64,7 @@ describe('Merchandise contract', function () {
       ).to.be.revertedWithCustomError(merchandiseC, 'ERC721NonexistentToken')
     })
 
-    it('Should revert mint merchandise with other merchandise if i not the owner', async () => {
+    it("Should revert when mint new merchandise from other merchandise I don't own", async () => {
       const { merchandiseC, prod2 } = await loadFixture(
         withCertifiedProductorAndMerchandise
       )
@@ -79,8 +79,8 @@ describe('Merchandise contract', function () {
     })
   })
 
-  describe('Transport', () => {
-    it('Should revert if owner mandate itself as transporter', async () => {
+  describe('Mandate', () => {
+    it('Should revert when owner assigns self as transporter', async () => {
       const { merchandiseC, prod1, transp1, transf1 } = await loadFixture(
         withCertifiedProductorAndMerchandise
       )
@@ -93,7 +93,7 @@ describe('Merchandise contract', function () {
         .to.be.revertedWithCustomError(merchandiseC, 'ERC721InvalidApprover')
         .withArgs(prod1.address)
     })
-    it('Should revert if owner mandate 0x as transporter', async () => {
+    it('Should revert when owner assigns 0x as transporter', async () => {
       const { merchandiseC, prod1, transp1, transf1 } = await loadFixture(
         withCertifiedProductorAndMerchandise
       )
@@ -106,7 +106,7 @@ describe('Merchandise contract', function () {
         .to.be.revertedWithCustomError(merchandiseC, 'ERC721InvalidApprover')
         .withArgs(ethers.ZeroAddress)
     })
-    it('Should revert if owner mandate itself as recipient', async () => {
+    it('Should revert when owner assigns self as recipient', async () => {
       const { merchandiseC, prod1, transp1, transf1 } = await loadFixture(
         withCertifiedProductorAndMerchandise
       )
@@ -119,7 +119,7 @@ describe('Merchandise contract', function () {
         .to.be.revertedWithCustomError(merchandiseC, 'ERC721InvalidReceiver')
         .withArgs(prod1.address)
     })
-    it('Should revert if owner mandate 0x as recipient', async () => {
+    it('Should revert when owner assigns 0x as recipient', async () => {
       const { merchandiseC, prod1, transp1, transf1 } = await loadFixture(
         withCertifiedProductorAndMerchandise
       )
@@ -133,7 +133,7 @@ describe('Merchandise contract', function () {
         .withArgs(ethers.ZeroAddress)
     })
 
-    it('Should mandate transporter to transfer merch to recipient ', async () => {
+    it('Should mandate transporter to deliver merchandise to recipient', async () => {
       const { merchandiseC, prod1, transp1, transf1 } = await loadFixture(
         withCertifiedProductorAndMerchandise
       )
@@ -155,7 +155,7 @@ describe('Merchandise contract', function () {
         .be.true
     })
 
-    it('Should revert not owner to merch that i mandate', async () => {
+    it('Should revert when unauthorized user try to mandate merchandise', async () => {
       const { merchandiseC, prod2, transp1, transf1 } = await loadFixture(
         withCertifiedProductorAndMerchandise
       )
@@ -169,7 +169,7 @@ describe('Merchandise contract', function () {
         .withArgs(prod2.address, MERCH_1_TREE.id)
     })
 
-    it('Should accept to transfer merch to recipient ', async () => {
+    it('Should accept to trasnport merchandise to recipient ', async () => {
       const { merchandiseC, prod1, transp1, transf1 } = await loadFixture(
         withCertifiedProductorAndMerchandise
       )
@@ -188,7 +188,7 @@ describe('Merchandise contract', function () {
         .be.true
     })
 
-    it('Should revert if accept non mandate merch', async () => {
+    it('Should revert when accepting to transfer non-mandated merchandise', async () => {
       const { merchandiseC, prod1, transp1, transf1 } = await loadFixture(
         withCertifiedProductorAndMerchandise
       )
@@ -203,7 +203,7 @@ describe('Merchandise contract', function () {
         .be.false
     })
 
-    it('Should validate transfer by transporter', async () => {
+    it('Should validate transfer conducted by transporter', async () => {
       const { merchandiseC, prod1, transp1, transf1 } = await loadFixture(
         withCertifiedProductorAndMerchandise
       )
@@ -225,7 +225,7 @@ describe('Merchandise contract', function () {
         .to.be.true
     })
 
-    it('Should revert if accept non accepted merch', async () => {
+    it('Should revert when validate transfer of non-accepted merchandise', async () => {
       const { merchandiseC, prod1, transp1, transf1 } = await loadFixture(
         withCertifiedProductorAndMerchandise
       )
@@ -241,6 +241,27 @@ describe('Merchandise contract', function () {
       )
         .to.be.revertedWithCustomError(merchandiseC, 'NotAccepted')
         .withArgs(transf1.address, MERCH_1_TREE.id)
+
+      expect(await merchandiseC.isTransportValidated(MERCH_1_TREE.id, transp1))
+        .to.be.false
+    })
+
+    it('Should revert when validate transfer if not the recipient', async () => {
+      const { merchandiseC, prod1, transp1, transf1, transf2 } =
+        await loadFixture(withCertifiedProductorAndMerchandise)
+
+      await merchandiseC
+        .connect(prod1)
+        .mandateTransport(transp1, transf1, MERCH_1_TREE.id)
+      await merchandiseC.connect(transp1).acceptTransport(MERCH_1_TREE.id)
+
+      await expect(
+        merchandiseC
+          .connect(transf2)
+          .validateTransport(MERCH_1_TREE.id, transp1)
+      )
+        .to.be.revertedWithCustomError(merchandiseC, 'NotReciever')
+        .withArgs(transf2.address, MERCH_1_TREE.id)
 
       expect(await merchandiseC.isTransportValidated(MERCH_1_TREE.id, transp1))
         .to.be.false

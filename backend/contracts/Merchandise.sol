@@ -34,7 +34,7 @@ contract Merchandise is ERC721URIStorage {
   error NotOwner(address addr, uint256 merchandiseId);
   error NotMandated(address addr, uint256 merchandiseId);
   error NotAccepted(address addr, uint256 merchandiseId);
-  error CantMandateOneself(address addr, uint256 merchandiseId);
+  error NotReciever(address addr, uint256 merchandiseId);
 
   // ---------- implementation --------
 
@@ -93,7 +93,7 @@ contract Merchandise is ERC721URIStorage {
   }
 
   function validateTransport(uint256 _merchandiseId, address by) external {
-    _requireAccepted(_merchandiseId, by);
+    _requireToValidate(_merchandiseId, by);
     mandates[_merchandiseId][by].status = MandateStatus.VALIDATED;
     emit TransportValidated(by, msg.sender, _merchandiseId);
   }
@@ -116,7 +116,10 @@ contract Merchandise is ERC721URIStorage {
     }
   }
 
-  function _requireAccepted(uint256 _merchandiseId, address by) internal view {
+  function _requireToValidate(uint256 _merchandiseId, address by) internal view {
+    if (mandates[_merchandiseId][by].to != msg.sender) {
+      revert NotReciever(msg.sender, _merchandiseId);
+    }
     if (mandates[_merchandiseId][by].status != MandateStatus.ACCEPTED) {
       revert NotAccepted(msg.sender, _merchandiseId);
     }

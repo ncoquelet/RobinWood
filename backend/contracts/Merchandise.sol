@@ -10,7 +10,11 @@ contract Merchandise is ERC721URIStorage {
   uint256 private _nextTokenId;
 
   enum MandateStatus {
-    CREATED, MANDATED, ACCEPTED, FULFILLED, VALIDATED
+    CREATED,
+    MANDATED,
+    ACCEPTED,
+    FULFILLED,
+    VALIDATED
   }
 
   struct Mandate {
@@ -30,6 +34,7 @@ contract Merchandise is ERC721URIStorage {
   error NotOwner(address addr, uint256 merchandiseId);
   error NotMandated(address addr, uint256 merchandiseId);
   error NotAccepted(address addr, uint256 merchandiseId);
+  error CantMandateOneself(address addr, uint256 merchandiseId);
 
   // ---------- implementation --------
 
@@ -61,6 +66,9 @@ contract Merchandise is ERC721URIStorage {
 
   function mandateTransport(address by, address to, uint256 _merchandiseId) external {
     _requireOwnMerch(_merchandiseId);
+    if (by == msg.sender) {
+      revert CantMandateOneself(msg.sender, _merchandiseId);
+    }
 
     mandates[_merchandiseId][by].to = to;
     emit TransportMandated(msg.sender, by, to, _merchandiseId);

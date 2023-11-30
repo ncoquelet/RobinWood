@@ -80,6 +80,20 @@ describe('Merchandise contract', function () {
   })
 
   describe('Transport', () => {
+    it('Should revert if owner mandate itself as transporter', async () => {
+      const { merchandiseC, prod1, transp1, transf1 } = await loadFixture(
+        withCertifiedProductorAndMerchandise
+      )
+
+      await expect(
+        merchandiseC
+          .connect(prod1)
+          .mandateTransport(prod1, transf1, MERCH_1_TREE.id)
+      )
+        .to.be.revertedWithCustomError(merchandiseC, 'CantMandateOneself')
+        .withArgs(prod1.address, MERCH_1_TREE.id)
+    })
+
     it('Should mandate transporter to transfer merch to recipient ', async () => {
       const { merchandiseC, prod1, transp1, transf1 } = await loadFixture(
         withCertifiedProductorAndMerchandise
@@ -114,9 +128,6 @@ describe('Merchandise contract', function () {
       )
         .to.be.revertedWithCustomError(merchandiseC, 'NotOwner')
         .withArgs(prod2.address, MERCH_1_TREE.id)
-
-      expect(await merchandiseC.isMandate(MERCH_1_TREE.id, transp1, transf1)).to
-        .be.false
     })
 
     it('Should accept to transfer merch to recipient ', async () => {

@@ -21,6 +21,7 @@ contract Merchandise is ERC721URIStorage {
   event MintedWithMerchandise(address indexed from, uint256 sourceId, uint256 merchandiseId);
   event TransportMandated(address indexed from, address indexed by, address to, uint256 indexed _merchandiseId);
   event TransportAccepted(address indexed by, address to, uint256 indexed _merchandiseId);
+  event TransportValidated(address indexed by, address to, uint256 indexed _merchandiseId);
 
   error NotCertified(address addr, uint256 labelId);
   error NotOwner(address addr, uint256 merchandiseId);
@@ -77,6 +78,15 @@ contract Merchandise is ERC721URIStorage {
     return mandates[_merchandiseId][by].accepted;
   }
 
+  function validateTransport(uint256 _merchandiseId, address by) external {
+    _requireAccepted(_merchandiseId, by);
+    mandates[_merchandiseId][by].validated = true;
+    emit TransportValidated(by, msg.sender, _merchandiseId);
+  }
+
+  function isTransportValidated(uint256 _merchandiseId, address by) external view returns (bool) {
+    return mandates[_merchandiseId][by].validated;
+  }
 
   // ---------- private --------
 
@@ -92,4 +102,9 @@ contract Merchandise is ERC721URIStorage {
     }
   }
 
+  function _requireAccepted(uint256 _merchandiseId, address by) internal view {
+    if (!mandates[_merchandiseId][by].accepted) {
+      revert NotAccepted(msg.sender, _merchandiseId);
+    }
+  }
 }

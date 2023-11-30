@@ -9,11 +9,21 @@ contract Merchandise is ERC721URIStorage {
 
   uint256 private _nextTokenId;
 
-  event MintedWithLabel(address indexed owner, uint256 labelId, uint256 merchandiseId);
-  event MintedWithMerchandise(address indexed owner, uint256 sourceId, uint256 merchandiseId);
+  struct Mandate {
+    address to;
+    bool accepted;
+    bool validated;
+  }
+
+  mapping(uint256 labelId => mapping(address transporter => Mandate)) mandates;
+
+  event MintedWithLabel(address indexed from, uint256 labelId, uint256 merchandiseId);
+  event MintedWithMerchandise(address indexed from, uint256 sourceId, uint256 merchandiseId);
+  event TransportMandated(address indexed from, address indexed by, address to, uint256 indexed _merchandiseId);
 
   error NotCertified(address addr, uint256 labelId);
   error NotOwner(address addr, uint256 merchandiseId);
+  error NotMandated(address addr, uint256 merchandiseId);
 
   // ---------- implementation --------
 
@@ -32,13 +42,34 @@ contract Merchandise is ERC721URIStorage {
   }
 
   function mintWithMerchandise(string calldata _tokenUri, uint256 _merchandiseId) external {
-    if (_ownerOf(_merchandiseId) != msg.sender) {
-      revert NotOwner(msg.sender, _merchandiseId);
-    }
+    _requireOwnMerch(_merchandiseId);
+
     uint256 tokenId = _nextTokenId++;
     _mint(msg.sender, tokenId);
     _burn(_merchandiseId);
     _setTokenURI(tokenId, _tokenUri);
     emit MintedWithMerchandise(msg.sender, _merchandiseId, tokenId);
   }
+
+  // ---------- transport --------
+
+  function mandateTransport(address by, address to, uint256 _merchandiseId) external {
+    _requireOwnMerch(_merchandiseId);
+
+    mandates[_merchandiseId][by].to = to;
+    emit TransportMandated(msg.sender, by, to, _merchandiseId);
+  }
+
+  function isMandate(uint256 _merchandiseId, address by, address to) external view returns (bool) {
+    return mandates[_merchandiseId][by].to == to;
+  }
+
+  // ---------- private --------
+
+  function _requireOwnMerch(uint256 _merchandiseId) internal view {
+    if (_ownerOf(_merchandiseId) != msg.sender) {
+      revert NotOwner(msg.sender, _merchandiseId);
+    }
+  }
+
 }

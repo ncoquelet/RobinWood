@@ -78,4 +78,45 @@ describe('Merchandise contract', function () {
         .withArgs(prod2.address, MERCH_1_TREE.id)
     })
   })
+
+  describe('Transport', () => {
+    it('Should mandate transporter to transfer merch to recipient ', async () => {
+      const { merchandiseC, prod1, transp1, transf1 } = await loadFixture(
+        withCertifiedProductorAndMerchandise
+      )
+
+      await expect(
+        merchandiseC
+          .connect(prod1)
+          .mandateTransport(transp1, transf1, MERCH_1_TREE.id)
+      )
+        .to.be.emit(merchandiseC, 'TransportMandated')
+        .withArgs(
+          prod1.address,
+          transp1.address,
+          transf1.address,
+          MERCH_1_TREE.id
+        )
+
+      expect(await merchandiseC.isMandate(MERCH_1_TREE.id, transp1, transf1)).to
+        .be.true
+    })
+
+    it('Should revert not owner to merch that i mandate', async () => {
+      const { merchandiseC, prod2, transp1, transf1 } = await loadFixture(
+        withCertifiedProductorAndMerchandise
+      )
+
+      await expect(
+        merchandiseC
+          .connect(prod2)
+          .mandateTransport(transp1, transf1, MERCH_1_TREE.id)
+      )
+        .to.be.revertedWithCustomError(merchandiseC, 'NotOwner')
+        .withArgs(prod2.address, MERCH_1_TREE.id)
+
+      expect(await merchandiseC.isMandate(MERCH_1_TREE.id, transp1, transf1)).to
+        .be.false
+    })
+  })
 })

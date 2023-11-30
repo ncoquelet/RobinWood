@@ -118,5 +118,39 @@ describe('Merchandise contract', function () {
       expect(await merchandiseC.isMandate(MERCH_1_TREE.id, transp1, transf1)).to
         .be.false
     })
+
+    it('Should accept to transfer merch to recipient ', async () => {
+      const { merchandiseC, prod1, transp1, transf1 } = await loadFixture(
+        withCertifiedProductorAndMerchandise
+      )
+
+      await merchandiseC
+        .connect(prod1)
+        .mandateTransport(transp1, transf1, MERCH_1_TREE.id)
+
+      await expect(
+        merchandiseC.connect(transp1).acceptTransport(MERCH_1_TREE.id)
+      )
+        .to.be.emit(merchandiseC, 'TransportAccepted')
+        .withArgs(transp1.address, transf1.address, MERCH_1_TREE.id)
+
+      expect(await merchandiseC.isMandateAccepted(MERCH_1_TREE.id, transp1)).to
+        .be.true
+    })
+
+    it('Should revert if accept non mandate merch', async () => {
+      const { merchandiseC, prod1, transp1, transf1 } = await loadFixture(
+        withCertifiedProductorAndMerchandise
+      )
+
+      await expect(
+        merchandiseC.connect(transp1).acceptTransport(MERCH_1_TREE.id)
+      )
+        .to.be.revertedWithCustomError(merchandiseC, 'NotMandated')
+        .withArgs(transp1.address, MERCH_1_TREE.id)
+
+      expect(await merchandiseC.isMandateAccepted(MERCH_1_TREE.id, transp1)).to
+        .be.false
+    })
   })
 })

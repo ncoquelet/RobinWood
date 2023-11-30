@@ -20,10 +20,12 @@ contract Merchandise is ERC721URIStorage {
   event MintedWithLabel(address indexed from, uint256 labelId, uint256 merchandiseId);
   event MintedWithMerchandise(address indexed from, uint256 sourceId, uint256 merchandiseId);
   event TransportMandated(address indexed from, address indexed by, address to, uint256 indexed _merchandiseId);
+  event TransportAccepted(address indexed by, address to, uint256 indexed _merchandiseId);
 
   error NotCertified(address addr, uint256 labelId);
   error NotOwner(address addr, uint256 merchandiseId);
   error NotMandated(address addr, uint256 merchandiseId);
+  error NotAccepted(address addr, uint256 merchandiseId);
 
   // ---------- implementation --------
 
@@ -64,11 +66,29 @@ contract Merchandise is ERC721URIStorage {
     return mandates[_merchandiseId][by].to == to;
   }
 
+  function acceptTransport(uint256 _merchandiseId) external {
+    _requireMandated(_merchandiseId);
+
+    mandates[_merchandiseId][msg.sender].accepted = true;
+    emit TransportAccepted(msg.sender, mandates[_merchandiseId][msg.sender].to, _merchandiseId);
+  }
+
+  function isMandateAccepted(uint256 _merchandiseId, address by) external view returns (bool) {
+    return mandates[_merchandiseId][by].accepted;
+  }
+
+
   // ---------- private --------
 
   function _requireOwnMerch(uint256 _merchandiseId) internal view {
     if (_ownerOf(_merchandiseId) != msg.sender) {
       revert NotOwner(msg.sender, _merchandiseId);
+    }
+  }
+
+  function _requireMandated(uint256 _merchandiseId) internal view {
+    if (mandates[_merchandiseId][msg.sender].to == address(0)) {
+      revert NotMandated(msg.sender, _merchandiseId);
     }
   }
 

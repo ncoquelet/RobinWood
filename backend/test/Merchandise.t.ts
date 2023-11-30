@@ -223,6 +223,10 @@ describe('Merchandise contract', function () {
 
       expect(await merchandiseC.isTransportValidated(MERCH_1_TREE.id, transp1))
         .to.be.true
+
+      expect(await merchandiseC.ownerOf(MERCH_1_TREE.id)).to.be.equals(
+        transf1.address
+      )
     })
 
     it('Should revert when validate transfer of non-accepted merchandise', async () => {

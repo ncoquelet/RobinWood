@@ -5,7 +5,7 @@ import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 import "./LabelDelivery.sol";
 
 contract Merchandise is ERC721URIStorage {
-  LabelDelivery internal labelDelivery;
+  LabelDelivery internal immutable labelDelivery;
 
   uint256 private _nextTokenId;
 
@@ -95,6 +95,8 @@ contract Merchandise is ERC721URIStorage {
   function validateTransport(uint256 _merchandiseId, address by) external {
     _requireToValidate(_merchandiseId, by);
     mandates[_merchandiseId][by].status = MandateStatus.VALIDATED;
+    // ok peut surement mieux faire, mais ca me permet de m'avancer pour le moment
+    _update(mandates[_merchandiseId][by].to, _merchandiseId, ownerOf(_merchandiseId));
     emit TransportValidated(by, msg.sender, _merchandiseId);
   }
 

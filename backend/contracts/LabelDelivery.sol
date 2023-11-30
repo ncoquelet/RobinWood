@@ -5,7 +5,7 @@ import "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
 import "./Label.sol";
 
 contract LabelDelivery is ERC1155 {
-  Label internal label;
+  Label internal immutable label;
 
   event Certified(address indexed actor, uint256 indexed labelId, bool certified);
 

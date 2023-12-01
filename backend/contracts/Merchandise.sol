@@ -29,6 +29,7 @@ contract Merchandise is ERC721URIStorage {
   event TransportMandated(address indexed from, address indexed by, address to, uint256 indexed _merchandiseId);
   event TransportAccepted(address indexed by, address to, uint256 indexed _merchandiseId);
   event TransportValidated(address indexed by, address to, uint256 indexed _merchandiseId);
+  event MandateFulFilled(address indexed by, address to, uint256 indexed _merchandiseId);
 
   error NotCertified(address addr, uint256 labelId);
   error NotOwner(address addr, uint256 merchandiseId);
@@ -92,6 +93,16 @@ contract Merchandise is ERC721URIStorage {
     return mandates[_merchandiseId][by].status == MandateStatus.ACCEPTED;
   }
 
+  function markFulfilled(uint256 _merchandiseId) external {
+    _requireToFulfilled(_merchandiseId);
+    mandates[_merchandiseId][msg.sender].status = MandateStatus.FULFILLED;
+    emit MandateFulFilled(msg.sender, mandates[_merchandiseId][msg.sender].to, _merchandiseId);
+  }
+
+  function isTransferFulfilled(uint256 _merchandiseId, address by) external view returns (bool) {
+    return mandates[_merchandiseId][by].status == MandateStatus.FULFILLED;
+  }
+
   function validateTransport(uint256 _merchandiseId, address by) external {
     _requireToValidate(_merchandiseId, by);
     mandates[_merchandiseId][by].status = MandateStatus.VALIDATED;
@@ -115,6 +126,12 @@ contract Merchandise is ERC721URIStorage {
   function _requireMandated(uint256 _merchandiseId) internal view {
     if (mandates[_merchandiseId][msg.sender].to == address(0)) {
       revert NotMandated(msg.sender, _merchandiseId);
+    }
+  }
+
+  function _requireToFulfilled(uint256 _merchandiseId) internal view {
+    if (mandates[_merchandiseId][msg.sender].status != MandateStatus.ACCEPTED) {
+      revert NotAccepted(msg.sender, _merchandiseId);
     }
   }
 

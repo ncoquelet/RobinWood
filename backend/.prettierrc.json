@@ -1,6 +1,6 @@
 {
   "trailingComma": "es5",
-  "printWidth": 100,
+  "printWidth": 80,
   "tabWidth": 2,
   "singleQuote": true,
   "semi": false,
@@ -9,6 +9,7 @@
       "files": "*.sol",
       "options": {
         "useTabs": false,
+        "printWidth": 200,
         "singleQuote": false,
         "bracketSpacing": false,
         "semi": true,

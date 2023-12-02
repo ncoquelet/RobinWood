@@ -1,6 +1,11 @@
 import { ethers } from 'hardhat'
+import { HardhatEthersSigner } from '@nomicfoundation/hardhat-ethers/signers'
 
-export async function getSign(merchId: number, from: any, to: any) {
+export async function getSign(
+  merchId: number,
+  from: HardhatEthersSigner,
+  to: HardhatEthersSigner
+) {
   const salt = ethers.randomBytes(32)
   const pack = ethers.solidityPacked(
     ['uint256', 'address', 'address', 'bytes32'],

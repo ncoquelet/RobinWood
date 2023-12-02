@@ -7,10 +7,15 @@ import {
   withCertifiedProductor,
   withCertifiedProductorAndMerchandise,
 } from './utils/fixtures'
-import { LABEL_1, MERCH_2_BOARD, MERCH_1_TREE } from './utils/constants'
+import {
+  LABEL_1,
+  MERCH_2_BOARD,
+  MERCH_1_TREE,
+  MandateStatus,
+} from './utils/constants'
 import { getSign } from './utils/crypto'
 
-describe('Merchandise contract', function () {
+describe('contract', function () {
   describe('Mint Merchandise', () => {
     it('Should mint new merchandise as a certified producer of a label', async () => {
       const { merchandiseC, prod1 } = await loadFixture(withCertifiedProductor)
@@ -152,7 +157,14 @@ describe('Merchandise contract', function () {
             transf1.address,
             MERCH_1_TREE.id
           )
-
+          .to.be.emit(merchandiseC, 'TransportMerchandise')
+          .withArgs(
+            MERCH_1_TREE.id,
+            prod1.address,
+            transp1.address,
+            transf1.address,
+            MandateStatus.CREATED
+          )
         expect(await merchandiseC.isMandate(MERCH_1_TREE.id, transp1, transf1))
           .to.be.true
       })
@@ -191,6 +203,14 @@ describe('Merchandise contract', function () {
         )
           .to.be.emit(merchandiseC, 'TransportAccepted')
           .withArgs(transp1.address, transf1.address, MERCH_1_TREE.id)
+          .to.be.emit(merchandiseC, 'TransportMerchandise')
+          .withArgs(
+            MERCH_1_TREE.id,
+            prod1.address,
+            transp1.address,
+            transf1.address,
+            MandateStatus.ACCEPTED
+          )
 
         expect(await merchandiseC.isMandateAccepted(MERCH_1_TREE.id, transp1))
           .to.be.true
@@ -240,6 +260,14 @@ describe('Merchandise contract', function () {
         )
           .to.be.emit(merchandiseC, 'TransportValidated')
           .withArgs(transp1.address, transf1.address, MERCH_1_TREE.id)
+          .to.be.emit(merchandiseC, 'TransportMerchandise')
+          .withArgs(
+            MERCH_1_TREE.id,
+            prod1.address,
+            transp1.address,
+            transf1.address,
+            MandateStatus.VALIDATED
+          )
 
         expect(
           await merchandiseC.isTransportValidated(MERCH_1_TREE.id, transp1)

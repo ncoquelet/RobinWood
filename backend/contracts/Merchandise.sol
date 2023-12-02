@@ -16,9 +16,7 @@ contract Merchandise is ERC721URIStorage {
 
   enum MandateStatus {
     CREATED,
-    MANDATED,
     ACCEPTED,
-    FULFILLED,
     VALIDATED
   }
 
@@ -32,9 +30,11 @@ contract Merchandise is ERC721URIStorage {
 
   event MintedWithLabel(address indexed from, uint256 labelId, uint256 merchandiseId);
   event MintedWithMerchandise(address indexed from, uint256 sourceId, uint256 merchandiseId);
+
   event TransportMandated(address indexed from, address indexed by, address to, uint256 indexed _merchandiseId);
   event TransportAccepted(address indexed by, address to, uint256 indexed _merchandiseId);
   event TransportValidated(address indexed by, address to, uint256 indexed _merchandiseId);
+  event TransportMerchandise(uint256 indexed _merchandiseId, address indexed from, address indexed by, address to, MandateStatus status);
 
   error NotCertified(address addr, uint256 labelId);
   error NotOwner(address addr, uint256 merchandiseId);
@@ -60,7 +60,7 @@ contract Merchandise is ERC721URIStorage {
   }
 
   function mintWithMerchandise(string calldata _tokenUri, uint256 _merchandiseId) external {
-    _requireOwnMerch(_merchandiseId);
+    _requireOwnerOf(_merchandiseId);
 
     uint256 tokenId = _nextTokenId++;
     _mint(msg.sender, tokenId);
@@ -72,7 +72,7 @@ contract Merchandise is ERC721URIStorage {
   // ---------- transport --------
 
   function mandateTransport(address by, address to, uint256 _merchandiseId) external {
-    _requireOwnMerch(_merchandiseId);
+    _requireOwnerOf(_merchandiseId);
     if (by == msg.sender || by == address(0)) {
       revert ERC721InvalidApprover(by);
     }
@@ -82,6 +82,7 @@ contract Merchandise is ERC721URIStorage {
 
     mandates[_merchandiseId][by].to = to;
     emit TransportMandated(msg.sender, by, to, _merchandiseId);
+    emit TransportMerchandise(_merchandiseId, msg.sender, by, to, MandateStatus.CREATED);
   }
 
   function isMandate(uint256 _merchandiseId, address by, address to) external view returns (bool) {
@@ -94,6 +95,7 @@ contract Merchandise is ERC721URIStorage {
     mandates[_merchandiseId][msg.sender].status = MandateStatus.ACCEPTED;
     mandates[_merchandiseId][msg.sender].transporterSign = sign;
     emit TransportAccepted(msg.sender, mandates[_merchandiseId][msg.sender].to, _merchandiseId);
+    emit TransportMerchandise(_merchandiseId, _ownerOf(_merchandiseId), msg.sender, mandates[_merchandiseId][msg.sender].to, MandateStatus.ACCEPTED);
   }
 
   function isMandateAccepted(uint256 _merchandiseId, address by) external view returns (bool) {
@@ -106,8 +108,9 @@ contract Merchandise is ERC721URIStorage {
 
     mandates[_merchandiseId][by].status = MandateStatus.VALIDATED;
     //TODO ok peut surement faire plus sexy, mais ca me permet d'avancer pour le moment
-    _update(mandates[_merchandiseId][by].to, _merchandiseId, ownerOf(_merchandiseId));
+    address previousOwner = _update(mandates[_merchandiseId][by].to, _merchandiseId, ownerOf(_merchandiseId));
     emit TransportValidated(by, msg.sender, _merchandiseId);
+    emit TransportMerchandise(_merchandiseId, previousOwner, by, msg.sender, MandateStatus.VALIDATED);
   }
 
   function isTransportValidated(uint256 _merchandiseId, address by) external view returns (bool) {
@@ -116,7 +119,7 @@ contract Merchandise is ERC721URIStorage {
 
   // ---------- private --------
 
-  function _requireOwnMerch(uint256 _merchandiseId) internal view {
+  function _requireOwnerOf(uint256 _merchandiseId) internal view {
     if (_ownerOf(_merchandiseId) != msg.sender) {
       revert NotOwner(msg.sender, _merchandiseId);
     }

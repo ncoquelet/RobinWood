@@ -1,3 +1,9 @@
+const MandateStatus = {
+  CREATED: 0,
+  ACCEPTED: 1,
+  VALIDATED: 2,
+}
+
 const LABEL_1 = {
   id: 0,
 }
@@ -24,12 +30,19 @@ const MERCH_2_BOARD: Merch = {
   tokenUri: 'New Board',
   name: 'New Board',
 }
+const MERCH_3_TABLE: Merch = {
+  id: 2,
+  tokenUri: 'New Table',
+  name: 'New Table',
+}
 
 export {
   Merch,
+  MandateStatus,
   LABEL_1,
   LABEL_2,
   UNKNOWN_LABEL_ID,
   MERCH_1_TREE,
   MERCH_2_BOARD,
+  MERCH_3_TABLE,
 }

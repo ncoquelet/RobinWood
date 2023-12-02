@@ -5,10 +5,10 @@ import { LABEL_1 } from './constants'
 
 export async function deployLabelContract() {
   // prettier-ignore
-  const [ owner, cert1, cert2, prod1, prod2, nego1, nego2, fab1, fab2, transf1, transf2, transp1, transp2, pub ] = await ethers.getSigners()
+  const [ owner, cert1, cert2, prod1, prod2, nego1, nego2, fab1, fab2, transf1, transf2, transp1, transp2, dist1, dist2, pub ] = await ethers.getSigners()
   const labelC = await ethers.deployContract('Label')
   // prettier-ignore
-  return { labelC, owner, cert1, cert2, prod1, prod2, nego1, nego2, fab1, fab2, transf1, transf2, transp1, transp2, pub }
+  return { labelC, owner, cert1, cert2, prod1, prod2, nego1, nego2, fab1, fab2, transf1, transf2, transp1, transp2, dist1, dist2, pub }
 }
 
 export async function deployLabelDeliveryContract() {

@@ -13,19 +13,6 @@
     "url": "https://github.com/ncoquelet/RobinWood/issues"
   },
   "homepage": "https://github.com/ncoquelet/RobinWood#readme",
-  "scripts": {
-    "blockchain": "npm run blk --workspace=backend",
-    "sc:help": "npm run help --workspace=backend",
-    "sc:test": "npm run test --workspace=backend",
-    "sc:deploy": "npm run deploy --workspace=backend",
-    "sc:deploy:local": "npm run deploy:local --workspace=backend",
-    "sc:deploy:sepolia": "npm run deploy:sepolia --workspace=backend",
-    "sc:deploy:goerli": "npm run deploy:goerli --workspace=backend",
-    "dapp:dev": "npm run dev --workspace=frontend",
-    "dapp:build": "npm run build --workspace=frontend",
-    "dapp:start": "npm run start --workspace=frontend",
-    "dapp:lint": "npm run lint --workspace=frontend"
-  },
   "engines": {
     "node": ">=18.18.2"
   }

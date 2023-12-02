@@ -4,10 +4,29 @@
     {
       "type": "hardhat",
       "task": "test",
-      "group": "test",
+      "group": {
+        "kind": "test",
+        "isDefault": true
+      },
       "problemMatcher": [],
-      "label": "hardhat: test - backend",
+      "label": "hh tests",
       "detail": "Run hardhat tests"
+    },
+    {
+      "type": "npm",
+      "script": "node",
+      "path": "backend",
+      "problemMatcher": [],
+      "label": "hh node",
+      "detail": "npx hardhat node",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "new",
+        "showReuseMessage": false,
+        "clear": false
+      }
     }
   ]
 }

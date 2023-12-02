@@ -2,9 +2,14 @@
 pragma solidity 0.8.20;
 
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
+import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
+import "@openzeppelin/contracts/utils/cryptography/MessageHashUtils.sol";
 import "./LabelDelivery.sol";
 
 contract Merchandise is ERC721URIStorage {
+  using ECDSA for bytes32;
+  using MessageHashUtils for bytes32;
+
   LabelDelivery internal immutable labelDelivery;
 
   uint256 private _nextTokenId;
@@ -20,6 +25,7 @@ contract Merchandise is ERC721URIStorage {
   struct Mandate {
     address to;
     MandateStatus status;
+    bytes transporterSign;
   }
 
   mapping(uint256 labelId => mapping(address transporter => Mandate)) mandates;
@@ -29,13 +35,13 @@ contract Merchandise is ERC721URIStorage {
   event TransportMandated(address indexed from, address indexed by, address to, uint256 indexed _merchandiseId);
   event TransportAccepted(address indexed by, address to, uint256 indexed _merchandiseId);
   event TransportValidated(address indexed by, address to, uint256 indexed _merchandiseId);
-  event MandateFulFilled(address indexed by, address to, uint256 indexed _merchandiseId);
 
   error NotCertified(address addr, uint256 labelId);
   error NotOwner(address addr, uint256 merchandiseId);
   error NotMandated(address addr, uint256 merchandiseId);
   error NotAccepted(address addr, uint256 merchandiseId);
   error NotReciever(address addr, uint256 merchandiseId);
+  error WronnSignature();
 
   // ---------- implementation --------
 
@@ -82,10 +88,11 @@ contract Merchandise is ERC721URIStorage {
     return mandates[_merchandiseId][by].to == to;
   }
 
-  function acceptTransport(uint256 _merchandiseId) external {
+  function acceptTransport(uint256 _merchandiseId, bytes calldata sign) external {
     _requireMandated(_merchandiseId);
 
     mandates[_merchandiseId][msg.sender].status = MandateStatus.ACCEPTED;
+    mandates[_merchandiseId][msg.sender].transporterSign = sign;
     emit TransportAccepted(msg.sender, mandates[_merchandiseId][msg.sender].to, _merchandiseId);
   }
 
@@ -93,20 +100,12 @@ contract Merchandise is ERC721URIStorage {
     return mandates[_merchandiseId][by].status == MandateStatus.ACCEPTED;
   }
 
-  function markFulfilled(uint256 _merchandiseId) external {
-    _requireToFulfilled(_merchandiseId);
-    mandates[_merchandiseId][msg.sender].status = MandateStatus.FULFILLED;
-    emit MandateFulFilled(msg.sender, mandates[_merchandiseId][msg.sender].to, _merchandiseId);
-  }
-
-  function isTransferFulfilled(uint256 _merchandiseId, address by) external view returns (bool) {
-    return mandates[_merchandiseId][by].status == MandateStatus.FULFILLED;
-  }
-
-  function validateTransport(uint256 _merchandiseId, address by) external {
+  function validateTransport(uint256 _merchandiseId, address by, bytes32 _salt) external {
     _requireToValidate(_merchandiseId, by);
+    _requireValidSignature(_merchandiseId, by, _salt);
+
     mandates[_merchandiseId][by].status = MandateStatus.VALIDATED;
-    // ok peut surement mieux faire, mais ca me permet de m'avancer pour le moment
+    //TODO ok peut surement faire plus sexy, mais ca me permet d'avancer pour le moment
     _update(mandates[_merchandiseId][by].to, _merchandiseId, ownerOf(_merchandiseId));
     emit TransportValidated(by, msg.sender, _merchandiseId);
   }
@@ -129,18 +128,19 @@ contract Merchandise is ERC721URIStorage {
     }
   }
 
-  function _requireToFulfilled(uint256 _merchandiseId) internal view {
-    if (mandates[_merchandiseId][msg.sender].status != MandateStatus.ACCEPTED) {
-      revert NotAccepted(msg.sender, _merchandiseId);
-    }
-  }
-
   function _requireToValidate(uint256 _merchandiseId, address by) internal view {
     if (mandates[_merchandiseId][by].to != msg.sender) {
       revert NotReciever(msg.sender, _merchandiseId);
     }
     if (mandates[_merchandiseId][by].status != MandateStatus.ACCEPTED) {
       revert NotAccepted(msg.sender, _merchandiseId);
+    }
+  }
+
+  function _requireValidSignature(uint256 _merchandiseId, address by, bytes32 _salt) internal view {
+    bytes32 hash = keccak256(abi.encodePacked(_merchandiseId, by, msg.sender, _salt));
+    if (hash.toEthSignedMessageHash().recover(mandates[_merchandiseId][by].transporterSign) == by) {
+      revert WronnSignature();
     }
   }
 }

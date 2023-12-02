@@ -8,6 +8,7 @@ import {
   withCertifiedProductorAndMerchandise,
 } from './utils/fixtures'
 import { LABEL_1, MERCH_2_BOARD, MERCH_1_TREE } from './utils/constants'
+import { getSign } from './utils/crypto'
 
 describe('Merchandise contract', function () {
   describe('Mint Merchandise', () => {
@@ -181,8 +182,12 @@ describe('Merchandise contract', function () {
           .connect(prod1)
           .mandateTransport(transp1, transf1, MERCH_1_TREE.id)
 
+        const { signature } = await getSign(MERCH_1_TREE.id, transp1, transf1)
+
         await expect(
-          merchandiseC.connect(transp1).acceptTransport(MERCH_1_TREE.id)
+          merchandiseC
+            .connect(transp1)
+            .acceptTransport(MERCH_1_TREE.id, signature)
         )
           .to.be.emit(merchandiseC, 'TransportAccepted')
           .withArgs(transp1.address, transf1.address, MERCH_1_TREE.id)
@@ -195,9 +200,11 @@ describe('Merchandise contract', function () {
         const { merchandiseC, prod1, transp1, transf1 } = await loadFixture(
           withCertifiedProductorAndMerchandise
         )
-
+        const { signature } = await getSign(MERCH_1_TREE.id, transp1, transf1)
         await expect(
-          merchandiseC.connect(transp1).acceptTransport(MERCH_1_TREE.id)
+          merchandiseC
+            .connect(transp1)
+            .acceptTransport(MERCH_1_TREE.id, signature)
         )
           .to.be.revertedWithCustomError(merchandiseC, 'NotMandated')
           .withArgs(transp1.address, MERCH_1_TREE.id)
@@ -207,48 +214,7 @@ describe('Merchandise contract', function () {
       })
     })
 
-    describe('Signing', () => {
-      it('Should sign transport reception', async () => {
-        const { merchandiseC, prod1, transp1, transf1 } = await loadFixture(
-          withCertifiedProductorAndMerchandise
-        )
-
-        await merchandiseC
-          .connect(prod1)
-          .mandateTransport(transp1, transf1, MERCH_1_TREE.id)
-        await merchandiseC.connect(transp1).acceptTransport(MERCH_1_TREE.id)
-
-        await expect(
-          merchandiseC.connect(transp1).markFulfilled(MERCH_1_TREE.id)
-        )
-          .to.be.emit(merchandiseC, 'MandateFulFilled')
-          .withArgs(transp1.address, transf1.address, MERCH_1_TREE.id)
-
-        expect(await merchandiseC.isTransferFulfilled(MERCH_1_TREE.id, transp1))
-          .to.be.true
-      })
-
-      it('Should revert when transporter fulfilled a transfer not accepted', async () => {
-        const { merchandiseC, prod1, transp1, transf1 } = await loadFixture(
-          withCertifiedProductorAndMerchandise
-        )
-
-        await merchandiseC
-          .connect(prod1)
-          .mandateTransport(transp1, transf1, MERCH_1_TREE.id)
-
-        await expect(
-          merchandiseC.connect(transp1).markFulfilled(MERCH_1_TREE.id)
-        )
-          .to.be.revertedWithCustomError(merchandiseC, 'NotAccepted')
-          .withArgs(transp1.address, MERCH_1_TREE.id)
-
-        expect(await merchandiseC.isMandateAccepted(MERCH_1_TREE.id, transp1))
-          .to.be.false
-      })
-    })
-
-    describe('Fulfilled', () => {
+    describe('Validate', () => {
       it('Should validate transfer conducted by transporter', async () => {
         const { merchandiseC, prod1, transp1, transf1 } = await loadFixture(
           withCertifiedProductorAndMerchandise
@@ -257,12 +223,20 @@ describe('Merchandise contract', function () {
         await merchandiseC
           .connect(prod1)
           .mandateTransport(transp1, transf1, MERCH_1_TREE.id)
-        await merchandiseC.connect(transp1).acceptTransport(MERCH_1_TREE.id)
+
+        const { signature, salt } = await getSign(
+          MERCH_1_TREE.id,
+          transp1,
+          transf1
+        )
+        await merchandiseC
+          .connect(transp1)
+          .acceptTransport(MERCH_1_TREE.id, signature)
 
         await expect(
           merchandiseC
             .connect(transf1)
-            .validateTransport(MERCH_1_TREE.id, transp1)
+            .validateTransport(MERCH_1_TREE.id, transp1, salt)
         )
           .to.be.emit(merchandiseC, 'TransportValidated')
           .withArgs(transp1.address, transf1.address, MERCH_1_TREE.id)
@@ -285,10 +259,15 @@ describe('Merchandise contract', function () {
           .connect(prod1)
           .mandateTransport(transp1, transf1, MERCH_1_TREE.id)
 
+        const { signature, salt } = await getSign(
+          MERCH_1_TREE.id,
+          transp1,
+          transf1
+        )
         await expect(
           merchandiseC
             .connect(transf1)
-            .validateTransport(MERCH_1_TREE.id, transp1)
+            .validateTransport(MERCH_1_TREE.id, transp1, salt)
         )
           .to.be.revertedWithCustomError(merchandiseC, 'NotAccepted')
           .withArgs(transf1.address, MERCH_1_TREE.id)
@@ -305,12 +284,19 @@ describe('Merchandise contract', function () {
         await merchandiseC
           .connect(prod1)
           .mandateTransport(transp1, transf1, MERCH_1_TREE.id)
-        await merchandiseC.connect(transp1).acceptTransport(MERCH_1_TREE.id)
+        const { signature, salt } = await getSign(
+          MERCH_1_TREE.id,
+          transp1,
+          transf1
+        )
+        await merchandiseC
+          .connect(transp1)
+          .acceptTransport(MERCH_1_TREE.id, signature)
 
         await expect(
           merchandiseC
             .connect(transf2)
-            .validateTransport(MERCH_1_TREE.id, transp1)
+            .validateTransport(MERCH_1_TREE.id, transp1, salt)
         )
           .to.be.revertedWithCustomError(merchandiseC, 'NotReciever')
           .withArgs(transf2.address, MERCH_1_TREE.id)

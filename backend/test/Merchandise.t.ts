@@ -13,6 +13,7 @@ import {
   MERCH_1_TREE,
   MandateStatus,
   MERCH_2_BOARD2,
+  MERCH_3_TABLE,
 } from './utils/constants'
 import { getSign } from './utils/crypto'
 
@@ -31,9 +32,7 @@ describe('contract', function () {
       expect(await merchandiseC.ownerOf(MERCH_1_TREE.id)).to.be.equals(
         prod1.address
       )
-      expect(await merchandiseC.parentsOf(MERCH_1_TREE.id)).to.be.equals(
-        prod1.address
-      )
+      expect(await merchandiseC.parentsOf(MERCH_1_TREE.id)).to.be.empty
     })
 
     it('Should revert when mint new merchandise as a non certified producer of a label', async () => {
@@ -58,14 +57,19 @@ describe('contract', function () {
           .connect(prod1)
           .mintWithParent(MERCH_2_BOARD.tokenUri, MERCH_1_TREE.id)
       )
-        .to.be.emit(merchandiseC, 'MintedWithMerchandise')
-        .withArgs(prod1.address, MERCH_1_TREE.id, MERCH_2_BOARD.id)
+        .to.be.emit(merchandiseC, 'Minted')
+        .withArgs(
+          prod1.address,
+          prod1.address,
+          [MERCH_1_TREE.id],
+          MERCH_2_BOARD.id
+        )
       expect(await merchandiseC.ownerOf(MERCH_2_BOARD.id)).to.be.equals(
         prod1.address
       )
     })
 
-    it('Should burn owner of parent ', async () => {
+    it('Should burn parent on mint', async () => {
       const { merchandiseC, prod1 } = await loadFixture(
         withCertifiedProductorAndMerchandise
       )
@@ -87,28 +91,104 @@ describe('contract', function () {
       await expect(
         merchandiseC
           .connect(prod1)
-          .mintWithParents(
+          .mintBatchWithParent(
             [MERCH_2_BOARD.tokenUri, MERCH_2_BOARD2.tokenUri],
             MERCH_1_TREE.id
           )
       )
-        .to.be.emit(merchandiseC, 'MintedWithMerchandise')
-        .withArgs(prod1.address, MERCH_1_TREE.id, MERCH_2_BOARD.id)
-        .to.be.emit(merchandiseC, 'MintedWithMerchandise')
-        .withArgs(prod1.address, MERCH_1_TREE.id, MERCH_2_BOARD2.id)
+        .to.be.emit(merchandiseC, 'Minted')
+        .withArgs(
+          prod1.address,
+          prod1.address,
+          [MERCH_1_TREE.id],
+          MERCH_2_BOARD.id
+        )
+        .to.be.emit(merchandiseC, 'Minted')
+        .withArgs(
+          prod1.address,
+          prod1.address,
+          [MERCH_1_TREE.id],
+          MERCH_2_BOARD2.id
+        )
 
       expect(await merchandiseC.ownerOf(MERCH_2_BOARD.id)).to.be.equals(
         prod1.address
       )
-      expect(await merchandiseC.parentsOf(MERCH_2_BOARD.id)).to.be.contains(
-        MERCH_1_TREE.id
+      expect(await merchandiseC.parentsOf(MERCH_2_BOARD.id)).to.be.eql(
+        [MERCH_1_TREE.id]
       )
       expect(await merchandiseC.ownerOf(MERCH_2_BOARD2.id)).to.be.equals(
         prod1.address
       )
-      expect(await merchandiseC.parentsOf(MERCH_2_BOARD2.id)).to.be.contains(
-        MERCH_1_TREE.id
+      expect(await merchandiseC.parentsOf(MERCH_2_BOARD2.id)).to.be.eql([
+        MERCH_1_TREE.id,
+      ])
+    })
+
+    it('Should mint one merchandise from two other merchandises I own ', async () => {
+      const { merchandiseC, prod1 } = await loadFixture(
+        withCertifiedProductorAndMerchandise
       )
+
+      await merchandiseC
+        .connect(prod1)
+        .mintBatchWithParent(
+          [MERCH_2_BOARD.tokenUri, MERCH_2_BOARD2.tokenUri],
+          MERCH_1_TREE.id
+        )
+
+      const MERCH_3_TABLE_ID = 3
+
+      await expect(
+        merchandiseC
+          .connect(prod1)
+          .mintWithParents(MERCH_3_TABLE.tokenUri, [
+            MERCH_2_BOARD.id,
+            MERCH_2_BOARD2.id,
+          ])
+      )
+        .to.be.emit(merchandiseC, 'Minted')
+        .withArgs(
+          prod1.address,
+          prod1.address,
+          [MERCH_2_BOARD.id, MERCH_2_BOARD2.id],
+          MERCH_3_TABLE_ID
+        )
+
+      expect(await merchandiseC.ownerOf(MERCH_3_TABLE_ID)).to.be.equals(
+        prod1.address
+      )
+      expect(await merchandiseC.parentsOf(MERCH_3_TABLE_ID)).to.have.lengthOf(2).eql([
+        MERCH_2_BOARD.id,
+        MERCH_2_BOARD2.id,
+      ])
+    })
+
+    it('Should burn parents on mint', async () => {
+      const { merchandiseC, prod1 } = await loadFixture(
+        withCertifiedProductorAndMerchandise
+      )
+
+      await merchandiseC
+        .connect(prod1)
+        .mintBatchWithParent(
+          [MERCH_2_BOARD.tokenUri, MERCH_2_BOARD2.tokenUri],
+          MERCH_1_TREE.id
+        )
+
+      await merchandiseC
+        .connect(prod1)
+        .mintWithParents(MERCH_3_TABLE.tokenUri, [
+          MERCH_2_BOARD.id,
+          MERCH_2_BOARD2.id,
+        ])
+
+      await expect(
+        merchandiseC.ownerOf(MERCH_2_BOARD.id)
+      ).to.be.revertedWithCustomError(merchandiseC, 'ERC721NonexistentToken')
+      await expect(
+        merchandiseC.ownerOf(MERCH_2_BOARD2.id)
+      ).to.be.revertedWithCustomError(merchandiseC, 'ERC721NonexistentToken')
     })
 
     it("Should revert when mint new merchandise from other merchandise I don't own", async () => {

@@ -5,17 +5,15 @@ import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import "@openzeppelin/contracts/utils/cryptography/MessageHashUtils.sol";
 import "./LabelDelivery.sol";
+import "./ERC6151.sol";
 
-contract Merchandise is ERC721 {
+contract Merchandise is ERC6151 {
   using ECDSA for bytes32;
   using MessageHashUtils for bytes32;
 
   LabelDelivery internal immutable labelDelivery;
 
   uint256 private _nextTokenId;
-
-  mapping(uint256 => uint256[]) private _parentsOf;
-  mapping(uint256 => uint256[]) private _childrenOf;
 
   enum MandateStatus {
     CREATED,
@@ -32,7 +30,6 @@ contract Merchandise is ERC721 {
   mapping(uint256 labelId => mapping(address transporter => Mandate)) mandates;
 
   event MintedWithLabel(address indexed from, uint256 labelId, uint256 merchandiseId);
-  event MintedWithMerchandise(address indexed from, uint256 sourceId, uint256 merchandiseId);
 
   event TransportMandated(address indexed from, address indexed by, address to, uint256 indexed _merchandiseId);
   event TransportAccepted(address indexed by, address to, uint256 indexed _merchandiseId);
@@ -46,11 +43,11 @@ contract Merchandise is ERC721 {
   error NotReciever(address addr, uint256 merchandiseId);
   error WronnSignature();
 
-  // ---------- implementation --------
-
-  constructor(address _labelDeliveryContract) ERC721("RobinWood Merchandises", "RWM") {
+  constructor(address _labelDeliveryContract) ERC6151("RobinWood Merchandises", "RWM") {
     labelDelivery = LabelDelivery(_labelDeliveryContract);
   }
+
+  // ---------- mint --------
 
   function mintWithLabel(string calldata _tokenUri, uint256 _labelId) external {
     if (!labelDelivery.isCertified(msg.sender, _labelId)) {
@@ -65,30 +62,29 @@ contract Merchandise is ERC721 {
     _requireOwnerOf(_merchandiseId);
 
     uint256 tokenId = _nextTokenId++;
-    _mint(msg.sender, tokenId);
+    _safeMintWithParent(msg.sender, _merchandiseId, tokenId);
     _burn(_merchandiseId);
-    emit MintedWithMerchandise(msg.sender, _merchandiseId, tokenId);
   }
 
-  function mintWithParents(string[] calldata _tokenUris, uint256 _merchandiseId) external {
+  function mintBatchWithParent(string[] calldata _tokenUris, uint256 _merchandiseId) external {
     _requireOwnerOf(_merchandiseId);
 
-    //uint256[] memory tokenIds = new uint[](_tokenUris.length);
-    for (uint i = 0; i < _tokenUris.length; i++) {
-      uint256 tokenId = _nextTokenId++;
-      _mint(msg.sender, tokenId);
-      _parentsOf[tokenId] = [_merchandiseId];
-      emit MintedWithMerchandise(msg.sender, _merchandiseId, tokenId);
+    uint256[] memory tokenIds = new uint[](_tokenUris.length);
+    for (uint i; i < _tokenUris.length; i++) {
+      tokenIds[i] = _nextTokenId++;
     }
-
+    _safeMintBatchWithParent(msg.sender, _merchandiseId, tokenIds);
     _burn(_merchandiseId);
   }
 
-  //
+  function mintWithParents(string calldata _tokenUri, uint256[] memory _parentIds) external {
+    _requiredParents(_parentIds);
 
-  function parentsOf(uint256 tokenId) external view returns (uint256[] memory) {
-    _requireOwned(tokenId);
-    return _parentsOf[tokenId];
+    uint256 tokenId = _nextTokenId++;
+    _safeMintWithParents(msg.sender, _parentIds, tokenId);
+    for (uint i; i < _parentIds.length; i++) {
+      _burn(_parentIds[i]);
+    }
   }
 
   // ---------- transport --------

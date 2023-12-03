@@ -15,23 +15,28 @@ const LABEL_2 = {
 const UNKNOWN_LABEL_ID = 999
 
 type Merch = {
-  id: number
+  id: bigint
   tokenUri: string
   name: string
 }
 
 const MERCH_1_TREE: Merch = {
-  id: 0,
+  id: 0n,
   tokenUri: 'New Tree',
   name: 'New Tree',
 }
 const MERCH_2_BOARD: Merch = {
-  id: 1,
+  id: 1n,
+  tokenUri: 'New Board',
+  name: 'New Board',
+}
+const MERCH_2_BOARD2: Merch = {
+  id: 2n,
   tokenUri: 'New Board',
   name: 'New Board',
 }
 const MERCH_3_TABLE: Merch = {
-  id: 2,
+  id: 2n,
   tokenUri: 'New Table',
   name: 'New Table',
 }
@@ -44,5 +49,6 @@ export {
   UNKNOWN_LABEL_ID,
   MERCH_1_TREE,
   MERCH_2_BOARD,
+  MERCH_2_BOARD2,
   MERCH_3_TABLE,
 }

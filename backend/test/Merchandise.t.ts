@@ -12,6 +12,7 @@ import {
   MERCH_2_BOARD,
   MERCH_1_TREE,
   MandateStatus,
+  MERCH_2_BOARD2,
 } from './utils/constants'
 import { getSign } from './utils/crypto'
 
@@ -30,8 +31,8 @@ describe('contract', function () {
       expect(await merchandiseC.ownerOf(MERCH_1_TREE.id)).to.be.equals(
         prod1.address
       )
-      expect(await merchandiseC.tokenURI(MERCH_1_TREE.id)).to.be.equals(
-        MERCH_1_TREE.tokenUri
+      expect(await merchandiseC.parentsOf(MERCH_1_TREE.id)).to.be.equals(
+        prod1.address
       )
     })
 
@@ -55,19 +56,59 @@ describe('contract', function () {
       await expect(
         merchandiseC
           .connect(prod1)
-          .mintWithMerchandise(MERCH_2_BOARD.tokenUri, MERCH_1_TREE.id)
+          .mintWithParent(MERCH_2_BOARD.tokenUri, MERCH_1_TREE.id)
       )
         .to.be.emit(merchandiseC, 'MintedWithMerchandise')
         .withArgs(prod1.address, MERCH_1_TREE.id, MERCH_2_BOARD.id)
       expect(await merchandiseC.ownerOf(MERCH_2_BOARD.id)).to.be.equals(
         prod1.address
       )
-      expect(await merchandiseC.tokenURI(MERCH_2_BOARD.id)).to.be.equals(
-        MERCH_2_BOARD.tokenUri
+    })
+
+    it('Should burn owner of parent ', async () => {
+      const { merchandiseC, prod1 } = await loadFixture(
+        withCertifiedProductorAndMerchandise
       )
+
+      await merchandiseC
+        .connect(prod1)
+        .mintWithParent(MERCH_2_BOARD.tokenUri, MERCH_1_TREE.id)
+
       await expect(
         merchandiseC.ownerOf(MERCH_1_TREE.id)
       ).to.be.revertedWithCustomError(merchandiseC, 'ERC721NonexistentToken')
+    })
+
+    it('Should mint 2 merchandises from other merchandises I own ', async () => {
+      const { merchandiseC, prod1 } = await loadFixture(
+        withCertifiedProductorAndMerchandise
+      )
+
+      await expect(
+        merchandiseC
+          .connect(prod1)
+          .mintWithParents(
+            [MERCH_2_BOARD.tokenUri, MERCH_2_BOARD2.tokenUri],
+            MERCH_1_TREE.id
+          )
+      )
+        .to.be.emit(merchandiseC, 'MintedWithMerchandise')
+        .withArgs(prod1.address, MERCH_1_TREE.id, MERCH_2_BOARD.id)
+        .to.be.emit(merchandiseC, 'MintedWithMerchandise')
+        .withArgs(prod1.address, MERCH_1_TREE.id, MERCH_2_BOARD2.id)
+
+      expect(await merchandiseC.ownerOf(MERCH_2_BOARD.id)).to.be.equals(
+        prod1.address
+      )
+      expect(await merchandiseC.parentsOf(MERCH_2_BOARD.id)).to.be.contains(
+        MERCH_1_TREE.id
+      )
+      expect(await merchandiseC.ownerOf(MERCH_2_BOARD2.id)).to.be.equals(
+        prod1.address
+      )
+      expect(await merchandiseC.parentsOf(MERCH_2_BOARD2.id)).to.be.contains(
+        MERCH_1_TREE.id
+      )
     })
 
     it("Should revert when mint new merchandise from other merchandise I don't own", async () => {
@@ -78,7 +119,7 @@ describe('contract', function () {
       await expect(
         merchandiseC
           .connect(prod2)
-          .mintWithMerchandise(MERCH_2_BOARD.tokenUri, MERCH_1_TREE.id)
+          .mintWithParent(MERCH_2_BOARD.tokenUri, MERCH_1_TREE.id)
       )
         .to.be.revertedWithCustomError(merchandiseC, 'NotOwner')
         .withArgs(prod2.address, MERCH_1_TREE.id)

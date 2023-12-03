@@ -2,7 +2,7 @@ import { ethers } from 'hardhat'
 import { HardhatEthersSigner } from '@nomicfoundation/hardhat-ethers/signers'
 
 export async function getSign(
-  merchId: number,
+  merchId: bigint,
   from: HardhatEthersSigner,
   to: HardhatEthersSigner
 ) {

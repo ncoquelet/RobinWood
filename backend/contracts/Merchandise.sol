@@ -1,18 +1,21 @@
 // SPDX-License-Identifier: SEE LICENSE IN LICENSE
 pragma solidity 0.8.20;
 
-import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
+import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import "@openzeppelin/contracts/utils/cryptography/MessageHashUtils.sol";
 import "./LabelDelivery.sol";
 
-contract Merchandise is ERC721URIStorage {
+contract Merchandise is ERC721 {
   using ECDSA for bytes32;
   using MessageHashUtils for bytes32;
 
   LabelDelivery internal immutable labelDelivery;
 
   uint256 private _nextTokenId;
+
+  mapping(uint256 => uint256[]) private _parentsOf;
+  mapping(uint256 => uint256[]) private _childrenOf;
 
   enum MandateStatus {
     CREATED,
@@ -55,18 +58,37 @@ contract Merchandise is ERC721URIStorage {
     }
     uint256 tokenId = _nextTokenId++;
     _mint(msg.sender, tokenId);
-    _setTokenURI(tokenId, _tokenUri);
     emit MintedWithLabel(msg.sender, _labelId, tokenId);
   }
 
-  function mintWithMerchandise(string calldata _tokenUri, uint256 _merchandiseId) external {
+  function mintWithParent(string calldata _tokenUri, uint256 _merchandiseId) external {
     _requireOwnerOf(_merchandiseId);
 
     uint256 tokenId = _nextTokenId++;
     _mint(msg.sender, tokenId);
     _burn(_merchandiseId);
-    _setTokenURI(tokenId, _tokenUri);
     emit MintedWithMerchandise(msg.sender, _merchandiseId, tokenId);
+  }
+
+  function mintWithParents(string[] calldata _tokenUris, uint256 _merchandiseId) external {
+    _requireOwnerOf(_merchandiseId);
+
+    //uint256[] memory tokenIds = new uint[](_tokenUris.length);
+    for (uint i = 0; i < _tokenUris.length; i++) {
+      uint256 tokenId = _nextTokenId++;
+      _mint(msg.sender, tokenId);
+      _parentsOf[tokenId] = [_merchandiseId];
+      emit MintedWithMerchandise(msg.sender, _merchandiseId, tokenId);
+    }
+
+    _burn(_merchandiseId);
+  }
+
+  //
+
+  function parentsOf(uint256 tokenId) external view returns (uint256[] memory) {
+    _requireOwned(tokenId);
+    return _parentsOf[tokenId];
   }
 
   // ---------- transport --------

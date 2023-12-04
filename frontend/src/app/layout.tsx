@@ -2,8 +2,25 @@
 
 import { Inter } from "next/font/google";
 
+// Wagmi & RainbowKit
+import "@rainbow-me/rainbowkit/styles.css";
+import {
+  ConnectButton,
+  getDefaultWallets,
+  RainbowKitProvider,
+} from "@rainbow-me/rainbowkit";
+import { configureChains, createConfig, WagmiConfig } from "wagmi";
+import { hardhat, sepolia, polygonMumbai } from "wagmi/chains";
+import { publicProvider } from "wagmi/providers/public";
+import { alchemyProvider } from "wagmi/providers/alchemy";
+
 // Styles
-import "./globals.css";
+//import "./globals.css";
+import { CacheProvider } from "@chakra-ui/next-js";
+import { ChakraProvider } from "@chakra-ui/react";
+
+// Providers
+import NotificationProvider from "@/context/NotificationContext";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -17,9 +34,59 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
+  const { chains, publicClient } = configureChains(
+    [sepolia],
+    process.env.NODE_ENV == "production"
+      ? [
+          alchemyProvider({
+            apiKey: process.env.NEXT_PUBLIC_ALCHEMY_KEY as string,
+          }),
+        ]
+      : [publicProvider()]
+  );
+
+  const { connectors } = getDefaultWallets({
+    appName: "RobinWood",
+    projectId: "0b549794414adcd53fe71bccc6c39e54",
+    chains,
+  });
+
+  const wagmiConfig = createConfig({
+    autoConnect: false,
+    connectors,
+    publicClient,
+  });
+
+  // const myCustomRainbowTheme = {
+  //   colors: {
+  //     accentColor: '#2a9d8f',
+  //   },
+  // };
+
   return (
     <html lang="en">
-      <body className={inter.className}>{children}</body>
+      <body className={inter.className}>
+        <div className="">
+          {/* <CustomBackground /> */}
+          <WagmiConfig config={wagmiConfig}>
+            <RainbowKitProvider
+              chains={chains}
+              modalSize="compact"
+              // avatar={CustomAvatar}
+              // theme={myCustomRainbowTheme as Theme}
+            >
+              <CacheProvider>
+                <ChakraProvider>
+                  <main className="">
+                    <div className=""></div>
+                    <NotificationProvider>{children}</NotificationProvider>
+                  </main>
+                </ChakraProvider>
+              </CacheProvider>
+            </RainbowKitProvider>
+          </WagmiConfig>
+        </div>
+      </body>
     </html>
   );
 }

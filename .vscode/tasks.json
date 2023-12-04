@@ -27,7 +27,9 @@
         "showReuseMessage": false,
         "clear": false
       },
-      "icon": {"id": "database"}
+      "icon": {
+        "id": "database"
+      }
     },
     {
       "type": "npm",
@@ -36,6 +38,25 @@
       "problemMatcher": [],
       "label": "Simulate RobinWood",
       "detail": "npx hardhat run scripts/simulation.ts --network localhost"
+    },
+    {
+      "type": "npm",
+      "script": "dev",
+      "path": "frontend",
+      "problemMatcher": [],
+      "label": "Next Dev",
+      "detail": "next dev",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "new",
+        "showReuseMessage": false,
+        "clear": false
+      },
+      "icon": {
+        "id": "server"
+      }
     }
   ]
 }

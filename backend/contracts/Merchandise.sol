@@ -5,9 +5,9 @@ import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import "@openzeppelin/contracts/utils/cryptography/MessageHashUtils.sol";
 import "./LabelDelivery.sol";
-import "./ERC6151.sol";
+import "./ERC6150plus.sol";
 
-contract Merchandise is ERC6151 {
+contract Merchandise is ERC6150plus {
   using ECDSA for bytes32;
   using MessageHashUtils for bytes32;
 
@@ -43,7 +43,7 @@ contract Merchandise is ERC6151 {
   error NotReciever(address addr, uint256 merchandiseId);
   error WronnSignature();
 
-  constructor(address _labelDeliveryContract) ERC6151("RobinWood Merchandises", "RWM") {
+  constructor(address _labelDeliveryContract) ERC6150plus("RobinWood Merchandises", "RWM") {
     labelDelivery = LabelDelivery(_labelDeliveryContract);
   }
 

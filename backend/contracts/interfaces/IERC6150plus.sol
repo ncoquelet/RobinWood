@@ -4,11 +4,11 @@ pragma solidity ^0.8.0;
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 
 /**
- * @title ERC-6151 Hierarchical NFTs Token Standard
- * @dev See https://eips.ethereum.org/EIPS/eip-6151
+ * @title ERC-6150plus Hierarchical NFTs Token Standard
+ * @dev See https://eips.ethereum.org/EIPS/eip-6150plus
  * Note: the ERC-165 identifier for this interface is 0x897e2c73.
  */
-interface IERC6151 is IERC721 {
+interface IERC6150plus is IERC721 {
   /**
    * @notice Emitted when `tokenId` token under `parentId` is minted.
    * @param minter The address of minter

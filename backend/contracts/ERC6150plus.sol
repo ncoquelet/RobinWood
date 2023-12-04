@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: CC0-1.0
 pragma solidity ^0.8.0;
 
-import "./interfaces/IERC6151.sol";
+import "./interfaces/IERC6150plus.sol";
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 
-abstract contract ERC6151 is ERC721, IERC6151 {
+abstract contract ERC6150plus is ERC721, IERC6150plus {
   mapping(uint256 => uint256[]) private _parentsOf;
   mapping(uint256 => uint256[]) private _childrenOf;
 
@@ -81,6 +81,13 @@ abstract contract ERC6151 is ERC721, IERC6151 {
     }
     for (uint i; i < parentIds.length; i++) {
       _requireOwned(parentIds[i]);
+    }
+  }
+
+  function _burnTo1(uint256 tokenId) internal {
+    address previousOwner = _update(address(1), tokenId, address(0));
+    if (previousOwner == address(0)) {
+      revert ERC721NonexistentToken(tokenId);
     }
   }
 }

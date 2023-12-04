@@ -1,13 +1,19 @@
 import { ethers } from 'hardhat'
 import {
+  ADDRESS_1,
   LABEL_1,
+  LABEL_NAMES,
   MERCH_1_TREE,
   MERCH_2_BOARD,
+  MERCH_2_BOARD2,
   MERCH_3_TABLE,
+  MERCH_NAMES,
   Merch,
 } from '../test/utils/constants'
 import { getSign } from '../test/utils/crypto'
 import { HardhatEthersSigner } from '@nomicfoundation/hardhat-ethers/signers'
+import { TypedEventLog } from '../typechain-types/common'
+import { TransportMerchandiseEvent } from '../typechain-types/contracts/Merchandise'
 
 async function getActors() {
   // prettier-ignore
@@ -22,13 +28,15 @@ async function getActors() {
   ACTORNAMES[transp1.address] = 'transporter'
   ACTORNAMES[dist1.address] = 'distributor'
 
-  console.log('Actors :')
+  console.log('\nCreating Actors :')
   Object.entries(ACTORNAMES).forEach(([address, title]) => {
     console.log(`${title}: ${address}`)
   })
 
-  function nameOf(signer: HardhatEthersSigner) {
-    return ACTORNAMES[signer.address]
+  function nameOf(signer: HardhatEthersSigner | string) {
+    const address =
+      signer instanceof HardhatEthersSigner ? signer.address : signer
+    return ACTORNAMES[address]
   }
 
   // prettier-ignore
@@ -37,23 +45,23 @@ async function getActors() {
 
 async function deployContracts() {
   const actors = await getActors()
-  console.log('\nDeploy contract')
+  console.log('\nDeploying  contract')
 
   const label = await ethers.deployContract('Label')
   await label.waitForDeployment()
-  console.log(`Label contract ${await label.getAddress()}`)
+  console.log(`Label contract: ${await label.getAddress()}`)
 
   const labelDelivery = await ethers.deployContract('LabelDelivery', [
     label.getAddress(),
   ])
   await labelDelivery.waitForDeployment()
-  console.log(`LabelDelivery contract ${await labelDelivery.getAddress()}`)
+  console.log(`LabelDelivery contract: ${await labelDelivery.getAddress()}`)
 
   const merchandise = await ethers.deployContract('Merchandise', [
     labelDelivery.getAddress(),
   ])
   await merchandise.waitForDeployment()
-  console.log(`Merchandise contract ${await merchandise.getAddress()}`)
+  console.log(`Merchandise contract: ${await merchandise.getAddress()}`)
 
   return { ...actors, label, labelDelivery, merchandise }
 }
@@ -61,18 +69,18 @@ async function deployContracts() {
 async function addNewLabel(deployed: any) {
   const { label, labelDelivery, cert1, prod1 } = deployed
 
-  console.log('\nSubmit new Label: OK')
-  await label.connect(cert1).submitLabel('Alyra Label')
+  console.log(`\nSubmit new label : OK`)
+  await label.connect(cert1).submitLabel(LABEL_1.name)
 
   console.log('List of submited labels')
   const submitedLabelfilter = label.filters.LabelSubmitted()
   await (
     await label.queryFilter(submitedLabelfilter)
   ).forEach((event: { args: { owner: any; tokenId: any } }) => {
-    console.log(` - ${event.args.owner}, id=${event.args.tokenId}`)
+    console.log(` - ${event.args.owner}, "${LABEL_NAMES[event.args.tokenId]}"`)
   })
 
-  console.log('\nAllow "Alyra Label": OK')
+  console.log('\nAllow new label: OK')
   await label.allowLabel(0, true)
 
   console.log('List of allowed labels')
@@ -80,7 +88,9 @@ async function addNewLabel(deployed: any) {
   await (
     await label.queryFilter(filter)
   ).forEach((event: { args: { tokenId: any; allowed: any } }) => {
-    console.log(` - #${event.args.tokenId} : ${event.args.allowed}`)
+    console.log(
+      ` - "${LABEL_NAMES[event.args.tokenId]}" : ${event.args.allowed}`
+    )
   })
 
   await labelDelivery.connect(cert1).certify(prod1, LABEL_1.id)
@@ -93,32 +103,40 @@ async function produceAndTransferTree(deployed: any) {
   await merchandise
     .connect(prod1)
     .mintWithLabel(MERCH_1_TREE.tokenUri, LABEL_1.id)
-  console.log('\nProducer mint new tree: OK')
+  console.log('\nProducer mint "New Tree": OK')
 
   console.log('\nProducer transfer tree to a transformer :')
   await transfer(prod1, transf1, transp1, MERCH_1_TREE, deployed)
 }
 
-async function produceAndTransferBoard(deployed: any) {
+async function produceAndTransferBoards(deployed: any) {
   const { merchandise, nego1, transf1, transp1, fab1 } = deployed
 
   await merchandise
     .connect(transf1)
-    .mintWithMerchandise(MERCH_2_BOARD.tokenUri, MERCH_1_TREE.id)
-  console.log('\nTransformer mint new board from tree: OK')
+    .mintBatchWithParent(
+      [MERCH_2_BOARD.tokenUri, MERCH_2_BOARD2.tokenUri],
+      MERCH_1_TREE.id
+    )
+  console.log('\nTransformer mint new boards from tree: OK')
 
-  console.log('\nTransformer transfer board to a trader :')
+  console.log('\nTransformer transfer boards to a trader :')
   await transfer(transf1, nego1, transp1, MERCH_2_BOARD, deployed)
+  await transfer(transf1, nego1, transp1, MERCH_2_BOARD2, deployed)
 
-  console.log('\nTrader transfer board to a maker :')
+  console.log('\nTrader transfer boards to a maker :')
   await transfer(nego1, fab1, transp1, MERCH_2_BOARD, deployed)
+  await transfer(nego1, fab1, transp1, MERCH_2_BOARD2, deployed)
 }
 
 async function produceAndTransferTable(deployed: any) {
   const { merchandise, transp1, fab1, dist1 } = deployed
   await merchandise
     .connect(fab1)
-    .mintWithMerchandise(MERCH_3_TABLE.tokenUri, MERCH_2_BOARD.id)
+    .mintWithParents(MERCH_3_TABLE.tokenUri, [
+      MERCH_2_BOARD.id,
+      MERCH_2_BOARD2.id,
+    ])
   console.log('\nMaker mint new table from board: OK')
 
   console.log('\nMaker transfer table to a distributor :')
@@ -144,17 +162,77 @@ async function transfer(
   })
 }
 
-async function tracabilityOfTable(deployed: any) {
-  console.log('\n\nIdentity card of Table')
+async function displayTracability(pre: string, tokenId: any, deployed: any) {
+  const { merchandise, transp1, fab1, dist1, nameOf } = deployed
+  console.log(`\n${pre}Identity card of ${MERCH_NAMES[tokenId]}`)
+
+  const transferfilter = merchandise.filters.Transfer(null, null, tokenId)
+  const events: Array<any> = (
+    await merchandise.queryFilter(transferfilter)
+  ).reverse()
+
+  for (let i = 0; i < events.length; i++) {
+    const event = events[i]
+
+    if (event.args.to == ADDRESS_1) {
+      continue
+    }
+
+    console.log(`${pre}# Owner : ${nameOf(event.args.to)}`)
+    if (event.args.from == ethers.ZeroAddress) {
+      const parentIds = await merchandise.parentsOf(tokenId)
+      if (parentIds.length != 0) {
+        console.log(
+          `${pre}  > Minted from : [ ${parentIds.map(
+            (parentId: any) => MERCH_NAMES[parentId]
+          )} ]`
+        )
+      } else {
+        console.log(`${pre}  > Minted with : [ ${LABEL_1.name} ]`)
+      }
+      for (let i = 0; i < parentIds.length; i++) {
+        await displayTracability(pre + '  ', parentIds[i], deployed)
+      }
+    } else {
+      console.log(`${pre}  > Transfered from : ${nameOf(event.args.from)}`)
+    }
+  }
+}
+
+async function displayTransportOf(tokenId: bigint, { merchandise }: any) {
+  const transportfilter = merchandise.filters.TransportMerchandise(tokenId)
+  const events: Array<any> = (
+    await merchandise.queryFilter(transportfilter)
+  ).reverse()
+
+  const lastEvent = events.slice(-1)
+
+  console.log(`   > Transfered from  ${tokenId}`)
+  if (events.length != 0) {
+    events.forEach((event: { args: { _merchandiseId: any; status: any } }) => {
+      console.log(`${event.args._merchandiseId} - ${event.args.status}`)
+    })
+  } else {
+    console.log('no transport')
+  }
 }
 
 async function main() {
+  console.log('Welcome to the RobinWood protocol')
+  console.log(
+    'Here is an example of wood traceability where a tree is transformed into a table after numerous exchanges between stakeholders.'
+  )
+  console.log('\n--------------------------------------------')
+
   const deployed = await deployContracts()
+  console.log('\n--------------------------------------------')
   await addNewLabel(deployed)
   await produceAndTransferTree(deployed)
-  await produceAndTransferBoard(deployed)
+  await produceAndTransferBoards(deployed)
   await produceAndTransferTable(deployed)
-  await tracabilityOfTable(deployed)
+  console.log('--------------------------------------------')
+
+  await displayTracability('', MERCH_3_TABLE.id, deployed)
 }
 
 main()

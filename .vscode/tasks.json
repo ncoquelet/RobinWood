@@ -9,7 +9,7 @@
         "isDefault": true
       },
       "problemMatcher": [],
-      "label": "hh tests",
+      "label": "Tests Hardhat",
       "detail": "Run hardhat tests"
     },
     {
@@ -17,7 +17,7 @@
       "script": "node",
       "path": "backend",
       "problemMatcher": [],
-      "label": "hh node",
+      "label": "Node Hardhat",
       "detail": "npx hardhat node",
       "presentation": {
         "echo": true,
@@ -26,7 +26,16 @@
         "panel": "new",
         "showReuseMessage": false,
         "clear": false
-      }
+      },
+      "icon": {"id": "database"}
+    },
+    {
+      "type": "npm",
+      "script": "simulate",
+      "path": "backend",
+      "problemMatcher": [],
+      "label": "Simulate RobinWood",
+      "detail": "npx hardhat run scripts/simulation.ts --network localhost"
     }
   ]
 }

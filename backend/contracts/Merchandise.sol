@@ -60,7 +60,7 @@ contract Merchandise is ERC6150plus {
 
     uint256 tokenId = _nextTokenId++;
     _safeMintWithParent(msg.sender, _merchandiseId, tokenId);
-    _burn(_merchandiseId);
+    _burnTo1(_merchandiseId);
   }
 
   function mintBatchWithParent(string[] calldata _tokenUris, uint256 _merchandiseId) external {
@@ -71,7 +71,7 @@ contract Merchandise is ERC6150plus {
       tokenIds[i] = _nextTokenId++;
     }
     _safeMintBatchWithParent(msg.sender, _merchandiseId, tokenIds);
-    _burn(_merchandiseId);
+    _burnTo1(_merchandiseId);
   }
 
   function mintWithParents(string calldata _tokenUri, uint256[] memory _parentIds) external {
@@ -80,7 +80,7 @@ contract Merchandise is ERC6150plus {
     uint256 tokenId = _nextTokenId++;
     _safeMintWithParents(msg.sender, _parentIds, tokenId);
     for (uint i; i < _parentIds.length; i++) {
-      _burn(_parentIds[i]);
+      _burnTo1(_parentIds[i]);
     }
   }
 

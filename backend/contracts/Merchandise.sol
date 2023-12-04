@@ -2,6 +2,7 @@
 pragma solidity 0.8.20;
 
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
+import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import "@openzeppelin/contracts/utils/cryptography/MessageHashUtils.sol";
 import "./LabelDelivery.sol";
@@ -12,8 +13,6 @@ contract Merchandise is ERC6150plus {
   using MessageHashUtils for bytes32;
 
   LabelDelivery internal immutable labelDelivery;
-
-  uint256 private _nextTokenId;
 
   enum MandateStatus {
     CREATED,
@@ -27,6 +26,8 @@ contract Merchandise is ERC6150plus {
     bytes transporterSign;
   }
 
+  uint256 private _nextTokenId;
+  mapping(uint256 tokenId => string) private _tokenURIs;
   mapping(uint256 labelId => mapping(address transporter => Mandate)) mandates;
 
   event MintedWithLabel(address indexed from, uint256 labelId, uint256 merchandiseId);
@@ -51,6 +52,7 @@ contract Merchandise is ERC6150plus {
       revert NotCertified(msg.sender, _labelId);
     }
     uint256 tokenId = _nextTokenId++;
+    _setTokenURI(tokenId, _tokenUri);
     _mint(msg.sender, tokenId);
     emit MintedWithLabel(msg.sender, _labelId, tokenId);
   }
@@ -59,6 +61,7 @@ contract Merchandise is ERC6150plus {
     _requireOwnerOf(_merchandiseId);
 
     uint256 tokenId = _nextTokenId++;
+    _setTokenURI(tokenId, _tokenUri);
     _safeMintWithParent(msg.sender, _merchandiseId, tokenId);
     _burnTo1(_merchandiseId);
   }
@@ -69,6 +72,7 @@ contract Merchandise is ERC6150plus {
     uint256[] memory tokenIds = new uint[](_tokenUris.length);
     for (uint i; i < _tokenUris.length; i++) {
       tokenIds[i] = _nextTokenId++;
+      _setTokenURI(tokenIds[i], _tokenUris[i]);
     }
     _safeMintBatchWithParent(msg.sender, _merchandiseId, tokenIds);
     _burnTo1(_merchandiseId);
@@ -78,10 +82,43 @@ contract Merchandise is ERC6150plus {
     _requiredParents(_parentIds);
 
     uint256 tokenId = _nextTokenId++;
+    _setTokenURI(tokenId, _tokenUri);
     _safeMintWithParents(msg.sender, _parentIds, tokenId);
     for (uint i; i < _parentIds.length; i++) {
       _burnTo1(_parentIds[i]);
     }
+  }
+
+  // ---------- mint --------
+
+  /**
+   * @dev See {IERC721Metadata-tokenURI}.
+   */
+  function tokenURI(uint256 tokenId) public view virtual override returns (string memory) {
+    _requireOwned(tokenId);
+
+    string memory _tokenURI = _tokenURIs[tokenId];
+    string memory base = _baseURI();
+
+    // If there is no base URI, return the token URI.
+    if (bytes(base).length == 0) {
+      return _tokenURI;
+    }
+    // If both are set, concatenate the baseURI and tokenURI (via string.concat).
+    if (bytes(_tokenURI).length > 0) {
+      return string.concat(base, _tokenURI);
+    }
+
+    return super.tokenURI(tokenId);
+  }
+
+  /**
+   * @dev Sets `_tokenURI` as the tokenURI of `tokenId`.
+   *
+   * Emits {MetadataUpdate}.
+   */
+  function _setTokenURI(uint256 tokenId, string memory _tokenURI) internal virtual {
+    _tokenURIs[tokenId] = _tokenURI;
   }
 
   // ---------- transport --------

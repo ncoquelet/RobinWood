@@ -33,6 +33,9 @@ describe('contract', function () {
       expect(await merchandiseC.ownerOf(MERCH_1_TREE.id)).to.be.equals(
         prod1.address
       )
+      expect(await merchandiseC.tokenURI(MERCH_1_TREE.id)).to.be.equals(
+        MERCH_1_TREE.tokenUri
+      )
       expect(await merchandiseC.parentsOf(MERCH_1_TREE.id)).to.be.empty
     })
 
@@ -65,6 +68,9 @@ describe('contract', function () {
           [MERCH_1_TREE.id],
           MERCH_2_BOARD.id
         )
+      expect(await merchandiseC.tokenURI(MERCH_2_BOARD.id)).to.be.equals(
+        MERCH_2_BOARD.tokenUri
+      )
       expect(await merchandiseC.ownerOf(MERCH_2_BOARD.id)).to.be.equals(
         prod1.address
       )
@@ -112,12 +118,18 @@ describe('contract', function () {
           MERCH_2_BOARD2.id
         )
 
+      expect(await merchandiseC.tokenURI(MERCH_2_BOARD.id)).to.be.equals(
+        MERCH_2_BOARD.tokenUri
+      )
       expect(await merchandiseC.ownerOf(MERCH_2_BOARD.id)).to.be.equals(
         prod1.address
       )
       expect(await merchandiseC.parentsOf(MERCH_2_BOARD.id)).to.be.eql([
         MERCH_1_TREE.id,
       ])
+      expect(await merchandiseC.tokenURI(MERCH_2_BOARD2.id)).to.be.equals(
+        MERCH_2_BOARD2.tokenUri
+      )
       expect(await merchandiseC.ownerOf(MERCH_2_BOARD2.id)).to.be.equals(
         prod1.address
       )
@@ -154,6 +166,9 @@ describe('contract', function () {
           MERCH_3_TABLE.id
         )
 
+      expect(await merchandiseC.tokenURI(MERCH_3_TABLE.id)).to.be.equals(
+        MERCH_3_TABLE.tokenUri
+      )
       expect(await merchandiseC.ownerOf(MERCH_3_TABLE.id)).to.be.equals(
         prod1.address
       )

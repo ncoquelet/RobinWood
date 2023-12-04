@@ -5,19 +5,24 @@ async function main() {
 
   const label = await ethers.deployContract('Label')
   await label.waitForDeployment()
-  console.log(`Label contract ${await label.getAddress()}`)
 
   const labelDelivery = await ethers.deployContract('LabelDelivery', [
     label.getAddress(),
   ])
   await labelDelivery.waitForDeployment()
-  console.log(`LabelDelivery contract ${await labelDelivery.getAddress()}`)
 
   const merchandise = await ethers.deployContract('Merchandise', [
     labelDelivery.getAddress(),
   ])
   await merchandise.waitForDeployment()
-  console.log(`Merchandise contract ${await merchandise.getAddress()}`)
+
+  console.log(`NEXT_PUBLIC_CONTRACT_LABEL=${await label.getAddress()}`)
+  console.log(
+    `NEXT_PUBLIC_CONTRACT_LABELDELIVERY=${await labelDelivery.getAddress()}`
+  )
+  console.log(
+    `NEXT_PUBLIC_CONTRACT_MERCHANDISE= ${await merchandise.getAddress()}`
+  )
 }
 
 main()

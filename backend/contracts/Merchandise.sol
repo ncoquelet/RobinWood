@@ -31,9 +31,6 @@ contract Merchandise is ERC6150plus {
 
   event MintedWithLabel(address indexed from, uint256 labelId, uint256 merchandiseId);
 
-  event TransportMandated(address indexed from, address indexed by, address to, uint256 indexed _merchandiseId);
-  event TransportAccepted(address indexed by, address to, uint256 indexed _merchandiseId);
-  event TransportValidated(address indexed by, address to, uint256 indexed _merchandiseId);
   event TransportMerchandise(uint256 indexed _merchandiseId, address indexed from, address indexed by, address to, MandateStatus status);
 
   error NotCertified(address addr, uint256 labelId);
@@ -99,7 +96,6 @@ contract Merchandise is ERC6150plus {
     }
 
     mandates[_merchandiseId][by].to = to;
-    emit TransportMandated(msg.sender, by, to, _merchandiseId);
     emit TransportMerchandise(_merchandiseId, msg.sender, by, to, MandateStatus.CREATED);
   }
 
@@ -112,7 +108,6 @@ contract Merchandise is ERC6150plus {
 
     mandates[_merchandiseId][msg.sender].status = MandateStatus.ACCEPTED;
     mandates[_merchandiseId][msg.sender].transporterSign = sign;
-    emit TransportAccepted(msg.sender, mandates[_merchandiseId][msg.sender].to, _merchandiseId);
     emit TransportMerchandise(_merchandiseId, _ownerOf(_merchandiseId), msg.sender, mandates[_merchandiseId][msg.sender].to, MandateStatus.ACCEPTED);
   }
 
@@ -127,7 +122,6 @@ contract Merchandise is ERC6150plus {
     mandates[_merchandiseId][by].status = MandateStatus.VALIDATED;
     //TODO ok peut surement faire plus sexy, mais ca me permet d'avancer pour le moment
     address previousOwner = _update(mandates[_merchandiseId][by].to, _merchandiseId, ownerOf(_merchandiseId));
-    emit TransportValidated(by, msg.sender, _merchandiseId);
     emit TransportMerchandise(_merchandiseId, previousOwner, by, msg.sender, MandateStatus.VALIDATED);
   }
 

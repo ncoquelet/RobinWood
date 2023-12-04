@@ -270,13 +270,6 @@ describe('contract', function () {
           merchandiseC
             .connect(prod1)
             .mandateTransport(transp1, transf1, MERCH_1_TREE.id)
-        )
-          .to.be.emit(merchandiseC, 'TransportMandated')
-          .withArgs(
-            prod1.address,
-            transp1.address,
-            transf1.address,
-            MERCH_1_TREE.id
           )
           .to.be.emit(merchandiseC, 'TransportMerchandise')
           .withArgs(
@@ -322,8 +315,6 @@ describe('contract', function () {
             .connect(transp1)
             .acceptTransport(MERCH_1_TREE.id, signature)
         )
-          .to.be.emit(merchandiseC, 'TransportAccepted')
-          .withArgs(transp1.address, transf1.address, MERCH_1_TREE.id)
           .to.be.emit(merchandiseC, 'TransportMerchandise')
           .withArgs(
             MERCH_1_TREE.id,
@@ -379,8 +370,6 @@ describe('contract', function () {
             .connect(transf1)
             .validateTransport(MERCH_1_TREE.id, transp1, salt)
         )
-          .to.be.emit(merchandiseC, 'TransportValidated')
-          .withArgs(transp1.address, transf1.address, MERCH_1_TREE.id)
           .to.be.emit(merchandiseC, 'TransportMerchandise')
           .withArgs(
             MERCH_1_TREE.id,

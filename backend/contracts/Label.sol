@@ -23,18 +23,30 @@ contract Label is Ownable, ERC721URIStorage {
     _setTokenURI(tokenId, _tokenURI);
 
     emit LabelSubmitted(msg.sender, tokenId);
-    // by default emit an not allowed event to enable to list not allowed labels
-    emit LabelAllowed(tokenId, false);
   }
 
+  /**
+   * Check if the label is allowed
+   * @param _tokenId the token label id
+   */
   function isAllowed(uint256 _tokenId) external view returns (bool) {
     return allowedLabels[_tokenId];
   }
 
+  /**
+   * Check if the owner of label is allowed to use it
+   * @param _tokenId the token label id
+   * @param _to certifier address
+   */
   function isAllowed(uint256 _tokenId, address _to) external view returns (bool) {
     return allowedLabels[_tokenId] && _ownerOf(_tokenId) == _to;
   }
 
+  /**
+   * Allow or revoke a submited label
+   * @param _tokenId the token label id
+   * @param _allowed allow with true, revoke with false
+   */
   function allowLabel(uint256 _tokenId, bool _allowed) external onlyOwner {
     if (_ownerOf(_tokenId) == address(0)) {
       revert UnknownLabel(_tokenId);

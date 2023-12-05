@@ -36,8 +36,6 @@ describe('contract', function () {
       await expect(labelC.connect(cert1).submitLabel('new label'))
         .to.emit(labelC, 'LabelSubmitted')
         .withArgs(cert1.address, LABEL_1.id)
-        .to.emit(labelC, 'LabelAllowed')
-        .withArgs(LABEL_1.id, false)
 
       expect(await labelC['isAllowed(uint256)'](LABEL_1.id)).to.be.false
     })

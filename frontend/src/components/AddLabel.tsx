@@ -71,7 +71,12 @@ const AddLabel: FC = () => {
 
   return (
     <>
-      <Button leftIcon={<FiPlus />} colorScheme="teal" onClick={onOpen}>
+      <Button
+        size="sm"
+        leftIcon={<FiPlus />}
+        colorScheme="teal"
+        onClick={onOpen}
+      >
         New Label
       </Button>
       <Drawer
@@ -129,7 +134,7 @@ const AddLabel: FC = () => {
                 </FormControl>
                 <FileUpload
                   name="logo"
-                  acceptedFileTypes="image/"
+                  acceptedFileTypes="image/*"
                   placeholder="Select label logo"
                   isRequired={true}
                   control={control}

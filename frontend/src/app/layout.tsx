@@ -16,14 +16,16 @@ import { alchemyProvider } from "wagmi/providers/alchemy";
 import { jsonRpcProvider } from "@wagmi/core/providers/jsonRpc";
 
 // Styles
-//import "./globals.css";
+import "./globals.css";
 import { CacheProvider } from "@chakra-ui/next-js";
 import { ChakraProvider } from "@chakra-ui/react";
 
 // Providers
 import NotificationProvider from "@/context/NotificationContext";
+import { NextIntlClientProvider } from "next-intl";
 
 const inter = Inter({ subsets: ["latin"] });
+const timeZone = "Europe/Paris";
 
 export default function RootLayout({
   children,
@@ -47,7 +49,7 @@ export default function RootLayout({
   });
 
   const wagmiConfig = createConfig({
-    autoConnect: false,
+    autoConnect: true,
     connectors,
     publicClient,
   });
@@ -60,10 +62,12 @@ export default function RootLayout({
             <RainbowKitProvider chains={chains} modalSize="compact">
               <CacheProvider>
                 <ChakraProvider>
-                  <main className="">
-                    <div className=""></div>
-                    <NotificationProvider>{children}</NotificationProvider>
-                  </main>
+                  <NextIntlClientProvider locale="en" timeZone={timeZone}>
+                    <main className="">
+                      <div className=""></div>
+                      <NotificationProvider>{children}</NotificationProvider>
+                    </main>
+                  </NextIntlClientProvider>
                 </ChakraProvider>
               </CacheProvider>
             </RainbowKitProvider>

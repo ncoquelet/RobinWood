@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev --experimental-https",
     "build": "next build",
     "start": "next start",
     "lint": "next lint"
@@ -22,6 +22,7 @@
     "framer-motion": "^10.16.12",
     "mime": "^4.0.0",
     "next": "^13.4.19",
+    "next-intl": "^3.2.3",
     "nft.storage": "^7.1.1",
     "react": "18.2.0",
     "react-dom": "18.2.0",

@@ -9,14 +9,13 @@ import {
 } from "@chakra-ui/react";
 import { FiFile } from "react-icons/fi";
 import { Control, useController } from "react-hook-form";
-import { FC, useRef } from "react";
+import { FC, PropsWithChildren, useRef } from "react";
 
-interface FileUploadParams {
+interface FileUploadParams extends PropsWithChildren {
   name: string;
   placeholder: string;
   acceptedFileTypes?: string;
   control: Control<any>;
-  children: React.ReactNode;
   isRequired: boolean;
 }
 

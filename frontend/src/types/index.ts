@@ -5,6 +5,8 @@ type LabelProperties = {
 };
 
 type Label = {
+  id?: bigint;
+  submitedDate?: Date;
   name: string;
   description: string;
   image: IPFSUri;

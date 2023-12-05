@@ -10,9 +10,10 @@ import {
   RainbowKitProvider,
 } from "@rainbow-me/rainbowkit";
 import { configureChains, createConfig, WagmiConfig } from "wagmi";
-import { hardhat, sepolia, polygonMumbai } from "wagmi/chains";
+import { hardhat, sepolia, polygonMumbai } from "@wagmi/core/chains";
 import { publicProvider } from "wagmi/providers/public";
 import { alchemyProvider } from "wagmi/providers/alchemy";
+import { jsonRpcProvider } from "@wagmi/core/providers/jsonRpc";
 
 // Styles
 //import "./globals.css";
@@ -30,14 +31,17 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   const { chains, publicClient } = configureChains(
-    [hardhat],
-    process.env.NODE_ENV == "production"
-      ? [
-          alchemyProvider({
-            apiKey: process.env.NEXT_PUBLIC_ALCHEMY_KEY as string,
-          }),
-        ]
-      : [publicProvider()]
+    [sepolia, polygonMumbai, hardhat],
+    [
+      alchemyProvider({
+        apiKey: process.env.NEXT_PUBLIC_ALCHEMY_KEY as string,
+      }),
+      jsonRpcProvider({
+        rpc: (chain) => ({
+          http: `http://127.0.0.1:8545/`,
+        }),
+      }),
+    ]
   );
 
   const { connectors } = getDefaultWallets({

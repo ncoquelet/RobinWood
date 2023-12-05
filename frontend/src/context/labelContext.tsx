@@ -14,14 +14,20 @@ import {
   writeContract,
 } from "wagmi/actions";
 import { Address, parseAbiItem } from "viem";
-import { NFTStorage } from "nft.storage";
 
 // Abis
 import labelAbi from "@/abi/Label.json";
 import { useAccount, usePublicClient } from "wagmi";
 import useNftStorage from "@/hooks/useNftStorage";
 import useBase64 from "@/hooks/useBase64";
+import { Label } from "@/types";
 const contractAddress = process.env.NEXT_PUBLIC_CONTRACT_LABEL as Address;
+
+export enum LabelStatus {
+  SUBMITED = "SUBMITED",
+  ALLOWED = "ALLOWED",
+  REVOKED = "REVOKED",
+}
 
 export type LabelFormData = {
   name: string;
@@ -60,30 +66,59 @@ export const LabelProvider = ({ children }: PropsWithChildren) => {
   const { fromBase64Uri, toBase64Uri } = useBase64();
 
   // refresh
-  const [refresh, setRefresh] = useState(false);
+  const [refresh, setRefresh] = useState(true);
   const [fetchingLabels, setFetchingLabels] = useState(false);
 
   // properties
   const [submitedlabels, setSubmitedlabels] = useState<Array<Label>>([]);
   const [allowedLabels, setAllowedLabels] = useState<Array<Label>>([]);
 
-  /**
-   *
-   */
-  const fetchLabels = async () => {
-    setFetchingLabels(true);
-    try {
-      console.log("fetch Labels");
-      const logs = await publicClient.getLogs({
-        address: contractAddress,
-        event: parseAbiItem(
-          "event LabelSubmitted(address indexed owner, uint256 tokenId)"
-        ),
-        fromBlock: BigInt(Number(process.env.NEXT_PUBLIC_FROM_BLOCK)),
-      });
-      setSubmitedlabels(
-        await Promise.all(
-          logs.map(async (log) => {
+  const fetchSubmitedLabels = async () => {
+    console.log("fetch Labels");
+    const logs = await publicClient.getLogs({
+      address: contractAddress,
+      event: parseAbiItem(
+        "event LabelSubmitted(address indexed owner, uint256 tokenId)"
+      ),
+      fromBlock: BigInt(Number(process.env.NEXT_PUBLIC_FROM_BLOCK)),
+    });
+    setSubmitedlabels(
+      await Promise.all(
+        logs.map(async (log) => {
+          const metadataUri = (await readContract({
+            address: contractAddress,
+            abi: labelAbi.abi,
+            functionName: "tokenURI",
+            args: [log.args.tokenId],
+          })) as string;
+          const block = await publicClient.getBlock({
+            blockHash: log.blockHash,
+          });
+          const metadata = fromBase64Uri(metadataUri) as Label;
+          metadata.id = log.args.tokenId;
+          metadata.status = LabelStatus.SUBMITED;
+          metadata.submitedDate = new Date(Number(block.timestamp) * 1000);
+
+          return metadata;
+        })
+      )
+    );
+  };
+
+  const fetchAllowedLabels = async () => {
+    console.log("fetch Labels");
+    const logs = await publicClient.getLogs({
+      address: contractAddress,
+      event: parseAbiItem(
+        "event LabelAllowed(uint256 indexed tokenId, bool indexed allowed)"
+      ),
+      fromBlock: BigInt(Number(process.env.NEXT_PUBLIC_FROM_BLOCK)),
+    });
+    setAllowedLabels(
+      await Promise.all(
+        logs
+          .filter((log) => log.args.allowed)
+          .map(async (log) => {
             const metadataUri = (await readContract({
               address: contractAddress,
               abi: labelAbi.abi,
@@ -95,13 +130,23 @@ export const LabelProvider = ({ children }: PropsWithChildren) => {
             });
             const metadata = fromBase64Uri(metadataUri) as Label;
             metadata.id = log.args.tokenId;
+            metadata.status = LabelStatus.ALLOWED;
             metadata.submitedDate = new Date(Number(block.timestamp) * 1000);
-            console.log(metadata);
 
             return metadata;
           })
-        )
-      );
+      )
+    );
+  };
+
+  /**
+   *
+   */
+  const fetchLabels = async () => {
+    setFetchingLabels(true);
+    try {
+      await fetchSubmitedLabels();
+      await fetchAllowedLabels();
     } finally {
       setFetchingLabels(false);
       setRefresh(false);

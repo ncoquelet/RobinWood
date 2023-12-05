@@ -9,6 +9,7 @@ import {
   LabelProvider,
   useLabels,
 } from "@/context/labelContext";
+import { Label } from "@/types";
 import {
   Box,
   Button,

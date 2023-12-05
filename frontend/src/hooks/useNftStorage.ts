@@ -1,6 +1,7 @@
 import { CIDString, NFTStorage } from "nft.storage";
 
 const HTTP_GATEWAY = "https://nftstorage.link/ipfs/";
+export type IPFSUri = `ipfs://${string}`;
 
 const useNftStorage = () => {
   const formatIpfsUri = (cid: CIDString, filename?: string): IPFSUri => {

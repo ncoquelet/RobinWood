@@ -1,4 +1,5 @@
 import useNftStorage from "@/hooks/useNftStorage";
+import { Label } from "@/types";
 import { ExternalLinkIcon } from "@chakra-ui/icons";
 
 import {

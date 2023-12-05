@@ -1,4 +1,5 @@
 import React, { FC, PropsWithChildren } from "react";
+import { FaGear } from "react-icons/fa6";
 import { useFormatter } from "next-intl";
 import { useLabels } from "@/context/labelContext";
 import {
@@ -17,6 +18,7 @@ import {
 } from "@chakra-ui/react";
 import LoadingTableRow from "./LoadingTableRow";
 import useNftStorage from "@/hooks/useNftStorage";
+import { Label } from "@/types";
 
 interface LabelTableParams {
   name: string;
@@ -75,6 +77,9 @@ const LabelTable: FC<LabelTableParams> = ({
                   </Td>
                   <Td>{label.properties.geographic_area}</Td>
                   <Td>{label.external_url}</Td>
+                  <Td>
+                    <FaGear />
+                  </Td>
                 </Tr>
               ))}
             </Tbody>

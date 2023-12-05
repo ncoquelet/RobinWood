@@ -15,10 +15,13 @@ import {
   Button,
   Card,
   CardBody,
+  FormControl,
+  FormLabel,
   HStack,
   Heading,
   Skeleton,
   Stack,
+  Switch,
   Text,
   useDisclosure,
 } from "@chakra-ui/react";
@@ -34,7 +37,7 @@ export default function Label() {
     revokedLabels,
     fetchingLabels,
     setCurrentLabel,
-    refreshLabels,
+    setFilterMyLabel,
   } = useLabels();
 
   return (
@@ -46,9 +49,15 @@ export default function Label() {
           <HStack spacing={4}>
             <Heading>Labels</Heading>
             <AddLabel />
-            <Button colorScheme="teal" variant="link" onClick={refreshLabels}>
-              Refresh
-            </Button>
+            <FormControl display="flex" alignItems="center">
+              <FormLabel htmlFor="filter-owner" mb="0">
+                Filter my labels ?
+              </FormLabel>
+              <Switch
+                id="filter-owner"
+                onChange={(e) => setFilterMyLabel(e.target.checked)}
+              />
+            </FormControl>
           </HStack>
           <LabelTable
             name="Submitted labels"

@@ -28,7 +28,7 @@ import { LabelFormData, useLabels } from "@/context/labelContext";
 
 const AddLabel: FC = () => {
   const toast = useToast();
-  const { submitNewLabel, refreshLabels } = useLabels();
+  const { submitNewLabel } = useLabels();
 
   const { isOpen, onOpen, onClose } = useDisclosure();
   const btnRef = useRef<HTMLButtonElement>(null);
@@ -50,7 +50,6 @@ const AddLabel: FC = () => {
       await submitNewLabel(data);
       reset();
       onClose();
-      await refreshLabels();
     } catch (err) {
       console.log("error " + err);
       if (err instanceof Error) {

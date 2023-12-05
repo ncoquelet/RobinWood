@@ -13,24 +13,53 @@ import {
   DrawerFooter,
   DrawerHeader,
   DrawerOverlay,
+  Flex,
   FormControl,
   FormLabel,
+  HStack,
   Image,
   Input,
   Link,
+  ListItem,
+  Spacer,
+  Tag,
   Textarea,
+  UnorderedList,
   useDisclosure,
   useToast,
 } from "@chakra-ui/react";
 import React, { FC, useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
+import { Address } from "viem";
+
+type CertifierFormData = {
+  productor: Address;
+};
 
 const LabelDetails: FC = () => {
   const toast = useToast();
   const { wrappeWithGateway } = useNftStorage();
-  const { currentLabel, isContractOwner, setCurrentLabel, allowRevokeLabel } =
-    useLabels();
+  const {
+    currentLabel,
+    isOwnerLabel,
+    isContractOwner,
+    certifiedAddresses,
+    setCurrentLabel,
+    allowRevokeLabel,
+    certifyAddress,
+    revokeAddress,
+  } = useLabels();
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [loading, setLoading] = useState(false);
+
+  const {
+    register,
+    handleSubmit,
+    resetField,
+    setError,
+    control,
+    formState: { errors, isSubmitting },
+  } = useForm<CertifierFormData>();
 
   const clearLabel = () => {
     setCurrentLabel(undefined);
@@ -47,6 +76,7 @@ const LabelDetails: FC = () => {
     setLoading(true);
     try {
       await allowRevokeLabel(currentLabel!);
+      clearLabel();
     } catch (err) {
       if (err instanceof Error) {
         toast({
@@ -60,13 +90,62 @@ const LabelDetails: FC = () => {
     }
   };
 
+  const handleCertifyAddress = handleSubmit(async (data) => {
+    setLoading(true);
+    try {
+      resetField("productor");
+      await revokeAddress(data.productor, currentLabel!);
+    } catch (err) {
+      if (err instanceof Error) {
+        toast({
+          title: "Error",
+          description: err.message,
+          status: "error",
+        });
+      }
+    } finally {
+      setLoading(false);
+    }
+  });
+
+  const handleRevokeAddress = async (productor: Address) => {
+    setLoading(true);
+    try {
+      await revokeAddress(productor, currentLabel!);
+    } catch (err) {
+      if (err instanceof Error) {
+        toast({
+          title: "Error",
+          description: err.message,
+          status: "error",
+        });
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const tagColor = () => {
+    switch (currentLabel?.status) {
+      case LabelStatus.SUBMITED:
+        return "gray";
+      case LabelStatus.ALLOWED:
+        return "green";
+      case LabelStatus.REVOKED:
+        return "orange";
+    }
+  };
+
   return (
     <Drawer isOpen={isOpen} placement="right" onClose={clearLabel} size="xl">
       <DrawerOverlay />
       <DrawerContent>
         <Box style={loading ? { pointerEvents: "none", opacity: 0.4 } : {}}>
           <DrawerCloseButton />
-          <DrawerHeader>Label details</DrawerHeader>
+          <DrawerHeader>
+            Label details{" "}
+            <Tag colorScheme={tagColor()}>{currentLabel?.status}</Tag>
+          </DrawerHeader>
 
           {currentLabel && (
             <DrawerBody>
@@ -110,14 +189,57 @@ const LabelDetails: FC = () => {
                 </Link>
               </FormControl>
               {currentLabel.status === LabelStatus.ALLOWED && (
-                <FormControl>
-                  <FormLabel>Certified Productors</FormLabel>
-                  <Textarea size="sm" readOnly={true}>
-                    0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266
-                    0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266
-                    0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266
-                  </Textarea>
-                </FormControl>
+                <>
+                  <form id="certify-form" onSubmit={handleCertifyAddress}>
+                    <FormControl>
+                      <FormLabel>Certified Productors</FormLabel>
+                      <UnorderedList maxH={180} overflow={"auto"}>
+                        {certifiedAddresses.map((address) => (
+                          <ListItem maxW={500}>
+                            <Flex>
+                              {address}
+                              {isOwnerLabel && (
+                                <>
+                                  <Spacer />{" "}
+                                  <Button
+                                    variant="link"
+                                    size="xs"
+                                    pr={4}
+                                    onClick={(e) =>
+                                      handleRevokeAddress(address)
+                                    }
+                                  >
+                                    revoke
+                                  </Button>
+                                </>
+                              )}
+                            </Flex>
+                          </ListItem>
+                        ))}
+                      </UnorderedList>
+                    </FormControl>
+                    {isOwnerLabel && (
+                      <HStack>
+                        <Button
+                          type="submit"
+                          isLoading={loading}
+                          loadingText="Adding"
+                          form="certify-form"
+                          colorScheme="blue"
+                        >
+                          Add
+                        </Button>
+                        <Input
+                          type="text"
+                          placeholder="Enter productor address"
+                          {...register("productor", {
+                            required: true,
+                          })}
+                        />
+                      </HStack>
+                    )}
+                  </form>
+                </>
               )}
             </DrawerBody>
           )}

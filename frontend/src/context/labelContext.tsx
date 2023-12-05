@@ -17,6 +17,7 @@ import { Address, parseAbiItem } from "viem";
 
 // Abis
 import labelAbi from "@/abi/Label.json";
+import labelDeliveryAbi from "@/abi/LabelDelivery.json";
 import { useAccount, useContractRead, usePublicClient } from "wagmi";
 import useNftStorage from "@/hooks/useNftStorage";
 import useBase64 from "@/hooks/useBase64";
@@ -41,29 +42,37 @@ export type LabelFormData = {
 
 type LabelContextProps = {
   currentLabel?: Label;
+  isOwnerLabel: boolean;
   submitedlabels: Array<Label>;
   allowedLabels: Array<Label>;
   revokedLabels: Array<Label>;
   fetchingLabels: boolean;
   isContractOwner: boolean;
+  certifiedAddresses: Array<Address>;
+  certifyAddress(productor: Address, label: Label): void;
+  revokeAddress(productor: Address, label: Label): void;
   setCurrentLabel(label: Label | undefined): void;
+  setFilterMyLabel(filter: boolean): void;
   submitNewLabel(label: LabelFormData): void;
   allowRevokeLabel(label: Label): void;
-  refreshLabels(): void;
 };
 
 // proposalcontext
 const LabelContext = createContext<LabelContextProps>({
   currentLabel: undefined,
+  isOwnerLabel: false,
   submitedlabels: [] as Array<Label>,
   allowedLabels: [] as Array<Label>,
   revokedLabels: [] as Array<Label>,
   fetchingLabels: false,
   isContractOwner: false,
+  certifiedAddresses: [] as Array<Address>,
+  certifyAddress: () => {},
+  revokeAddress: () => {},
   setCurrentLabel: () => {},
+  setFilterMyLabel: () => {},
   submitNewLabel: () => {},
   allowRevokeLabel: () => {},
-  refreshLabels: () => {},
 });
 
 export function useLabels() {
@@ -82,17 +91,18 @@ export const LabelProvider = ({ children }: PropsWithChildren) => {
   const [fetchingLabels, setFetchingLabels] = useState(false);
 
   // properties
+  const [isOwnerLabel, setIsOwnerLabel] = useState<boolean>(false);
+  const [filterMyLabel, setFilterMyLabel] = useState(false);
   const [currentLabel, setCurrentLabel] = useState<Label>();
   const [submitedlabels, setSubmitedlabels] = useState<Array<Label>>([]);
   const [allowedLabels, setAllowedLabels] = useState<Array<Label>>([]);
   const [revokedLabels, setRevokedLabels] = useState<Array<Label>>([]);
+  const [certifiedAddresses, setCertifiedAddresses] = useState<Array<Address>>(
+    []
+  );
 
   // contract owner
-  const {
-    data: owner,
-    isLoading: isLoadingOwner,
-    refetch,
-  } = useContractRead({
+  const { data: owner } = useContractRead({
     address: labelContractAddress as Address,
     abi: labelAbi.abi,
     functionName: "owner",
@@ -155,33 +165,57 @@ export const LabelProvider = ({ children }: PropsWithChildren) => {
           : LabelStatus.REVOKED;
       });
 
-      const labelbyStatusMap = allLabels.reduce((acc, label) => {
-        if (label.status) {
-          const byStatus = acc.get(label.status) || [];
-          acc.set(label.status, [...byStatus, label]);
-        }
-        return acc;
-      }, new Map<LabelStatus, Array<Label>>());
+      const labelbyStatusMap = allLabels
+        .filter((label) => !filterMyLabel || label.owner === address)
+        .reduce((acc, label) => {
+          if (label.status) {
+            const byStatus = acc.get(label.status) || [];
+            acc.set(label.status, [...byStatus, label]);
+          }
+          return acc;
+        }, new Map<LabelStatus, Array<Label>>());
 
-      const allowedLabels = labelbyStatusMap.get(LabelStatus.ALLOWED);
-      if (allowedLabels) {
-        setAllowedLabels(allowedLabels);
-      }
-      const submitedLabels = labelbyStatusMap.get(LabelStatus.SUBMITED);
-      if (submitedLabels) {
-        setSubmitedlabels(submitedLabels);
-      }
-      const revokedLabels = labelbyStatusMap.get(LabelStatus.REVOKED);
-      if (revokedLabels) {
-        setRevokedLabels(revokedLabels);
-      }
+      setAllowedLabels(labelbyStatusMap.get(LabelStatus.ALLOWED) || []);
+      setSubmitedlabels(labelbyStatusMap.get(LabelStatus.SUBMITED) || []);
+      setRevokedLabels(labelbyStatusMap.get(LabelStatus.REVOKED) || []);
     } finally {
       setFetchingLabels(false);
       setRefresh(false);
     }
   };
 
-  const fetchLabelDelivery = () => {};
+  const fetchLabelDelivery = async () => {
+    console.log("fetch Labels delivery");
+    const submitedLogs = await publicClient.getLogs({
+      address: labelDeliveryContractAddress,
+      event: parseAbiItem(
+        "event Certified(address indexed actor, uint256 indexed labelId, bool certified)"
+      ),
+
+      fromBlock: BigInt(Number(process.env.NEXT_PUBLIC_FROM_BLOCK)),
+    });
+
+    const certifiedAddrs = submitedLogs
+      .reduce((acc, log) => {
+        if (log.args.actor) {
+          log.args.certified
+            ? acc.set(log.args.actor, true)
+            : acc.delete(log.args.actor);
+        }
+        return acc;
+      }, new Map<Address, boolean>())
+      .keys();
+    setCertifiedAddresses([...certifiedAddrs]);
+
+    const isOwnerOfLabel = await readContract({
+      address: labelContractAddress as Address,
+      abi: labelAbi.abi,
+      functionName: "isAllowed",
+      args: [currentLabel?.id, address],
+    });
+
+    setIsOwnerLabel(isOwnerOfLabel == true);
+  };
 
   /**
    * submit a new label
@@ -218,6 +252,7 @@ export const LabelProvider = ({ children }: PropsWithChildren) => {
       args: [labelMetadataBase64],
     });
     const data = await waitForTransaction({ hash });
+    fetchLabels();
   };
 
   const allowRevokeLabel = async (label: Label) => {
@@ -231,27 +266,55 @@ export const LabelProvider = ({ children }: PropsWithChildren) => {
     const data = await waitForTransaction({ hash });
   };
 
-  useEffect(() => {
-    if (refresh) {
-      fetchLabels();
-    }
-  }, [refresh]);
+  const certifyAddress = async (productor: Address, label: Label) => {
+    const { hash } = await writeContract({
+      address: labelDeliveryContractAddress,
+      abi: labelDeliveryAbi.abi,
+      functionName: "certify",
+      args: [productor, label.id],
+    });
 
-  const refreshLabels = () => {
-    setRefresh(true);
+    const data = await waitForTransaction({ hash });
+    await fetchLabelDelivery();
   };
+
+  const revokeAddress = async (productor: Address, label: Label) => {
+    const { hash } = await writeContract({
+      address: labelDeliveryContractAddress,
+      abi: labelDeliveryAbi.abi,
+      functionName: "revoke",
+      args: [productor, label.id],
+    });
+
+    const data = await waitForTransaction({ hash });
+    await fetchLabelDelivery();
+  };
+
+  useEffect(() => {
+    fetchLabels();
+  }, [filterMyLabel]);
+
+  useEffect(() => {
+    if (currentLabel) {
+      fetchLabelDelivery();
+    }
+  }, [currentLabel]);
 
   return (
     <LabelContext.Provider
       value={{
         currentLabel,
+        isOwnerLabel,
         setCurrentLabel,
+        setFilterMyLabel,
         submitedlabels,
         allowedLabels,
         revokedLabels,
         fetchingLabels,
         isContractOwner,
-        refreshLabels,
+        certifiedAddresses,
+        certifyAddress,
+        revokeAddress,
         allowRevokeLabel,
         submitNewLabel,
       }}

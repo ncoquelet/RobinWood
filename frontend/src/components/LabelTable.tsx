@@ -35,7 +35,7 @@ const LabelTable: FC<LabelTableParams> = ({
   loading,
   onRowClick,
 }) => {
-  const { wrappeWithGateway } = useNftStorage();
+  const { truncateCid } = useNftStorage();
   const format = useFormatter();
 
   return (
@@ -80,7 +80,7 @@ const LabelTable: FC<LabelTableParams> = ({
                       : "-"}
                   </Td>
                   <Td>{label.properties.geographic_area}</Td>
-                  <Td>{label.external_url}</Td>
+                  <Td>{truncateCid(label.external_url)}</Td>
                   <Td>
                     <FaGear />
                   </Td>

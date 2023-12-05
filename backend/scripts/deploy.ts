@@ -1,6 +1,8 @@
 import { ethers } from 'hardhat'
 
 async function main() {
+  const [deployer] = await ethers.getSigners()
+
   console.log('\nDeploy contract')
 
   const label = await ethers.deployContract('Label')

@@ -6,7 +6,7 @@ import { Address } from "viem";
 import { NFTStorage } from "nft.storage";
 
 // Abis
-import labelAbi from "../../../backend/artifacts/contracts/Label.sol/Label.json";
+import labelAbi from "@/abi/Label.json";
 import { useAccount } from "wagmi";
 import useNftStorage from "@/hooks/useNftStorage";
 const contractAddress = process.env.NEXT_PUBLIC_CONTRACT_LABEL as Address;

@@ -1,17 +1,17 @@
-import { HardhatUserConfig } from 'hardhat/config';
-import '@nomicfoundation/hardhat-toolbox';
-import '@nomicfoundation/hardhat-ignition';
-import '@nomicfoundation/hardhat-verify';
-import 'solidity-docgen';
+import { HardhatUserConfig } from 'hardhat/config'
+import '@nomicfoundation/hardhat-toolbox'
+import '@nomicfoundation/hardhat-ignition'
+import '@nomicfoundation/hardhat-verify'
+import 'solidity-docgen'
 
-const { MNEMONIC, ALCHEMY_RPC_URL, ALCHEMY_ID, ETHERSCAN_ID } = process.env;
-const SEPOLIA_RPC_URL = `${ALCHEMY_RPC_URL}/${ALCHEMY_ID}`;
+const { ACCOUNT0, ALCHEMY_SEPOLIA_RPC_URL, ETHERSCAN_ID } = process.env
 
 const config: HardhatUserConfig = {
   networks: {
     sepolia: {
-      url: SEPOLIA_RPC_URL,
+      url: ALCHEMY_SEPOLIA_RPC_URL,
       chainId: 11155111,
+      accounts: [ACCOUNT0 as string],
     },
   },
 
@@ -28,6 +28,6 @@ const config: HardhatUserConfig = {
       },
     },
   },
-};
+}
 
-export default config;
+export default config

@@ -17,7 +17,7 @@ import { Address, parseAbiItem } from "viem";
 
 // Abis
 import labelAbi from "@/abi/Label.json";
-import { useAccount, usePublicClient } from "wagmi";
+import { useAccount, useContractRead, usePublicClient } from "wagmi";
 import useNftStorage from "@/hooks/useNftStorage";
 import useBase64 from "@/hooks/useBase64";
 import { Label } from "@/types";
@@ -40,8 +40,11 @@ export type LabelFormData = {
 type LabelContextProps = {
   submitedlabels: Array<Label>;
   allowedLabels: Array<Label>;
+  revokedLabels: Array<Label>;
   fetchingLabels: boolean;
+  isContractOwner: boolean;
   submitNewLabel(label: LabelFormData): void;
+  allowRevokeLabel(label: Label): void;
   refreshLabels(): void;
 };
 
@@ -49,8 +52,11 @@ type LabelContextProps = {
 const LabelContext = createContext<LabelContextProps>({
   submitedlabels: [] as Array<Label>,
   allowedLabels: [] as Array<Label>,
+  revokedLabels: [] as Array<Label>,
   fetchingLabels: false,
+  isContractOwner: false,
   submitNewLabel: () => {},
+  allowRevokeLabel: () => {},
   refreshLabels: () => {},
 });
 
@@ -61,7 +67,7 @@ export function useLabels() {
 export const LabelProvider = ({ children }: PropsWithChildren) => {
   // connection + utils
   const publicClient = usePublicClient();
-  const { address, isDisconnected } = useAccount(); // TODO: Handle isDisconnected and redirects
+  const { address } = useAccount(); // TODO: Handle isDisconnected and redirects
   const { nftstorage, formatIpfsUri } = useNftStorage();
   const { fromBase64Uri, toBase64Uri } = useBase64();
 
@@ -72,19 +78,37 @@ export const LabelProvider = ({ children }: PropsWithChildren) => {
   // properties
   const [submitedlabels, setSubmitedlabels] = useState<Array<Label>>([]);
   const [allowedLabels, setAllowedLabels] = useState<Array<Label>>([]);
+  const [revokedLabels, setRevokedLabels] = useState<Array<Label>>([]);
 
-  const fetchSubmitedLabels = async () => {
-    console.log("fetch Labels");
-    const logs = await publicClient.getLogs({
-      address: contractAddress,
-      event: parseAbiItem(
-        "event LabelSubmitted(address indexed owner, uint256 tokenId)"
-      ),
-      fromBlock: BigInt(Number(process.env.NEXT_PUBLIC_FROM_BLOCK)),
-    });
-    setSubmitedlabels(
-      await Promise.all(
-        logs.map(async (log) => {
+  // contract owner
+  const {
+    data: owner,
+    isLoading: isLoadingOwner,
+    refetch,
+  } = useContractRead({
+    address: contractAddress as Address,
+    abi: labelAbi.abi,
+    functionName: "owner",
+  });
+
+  const isContractOwner = address! && address === owner; // Is the current user the owner of the contract ?
+
+  // fetch
+
+  const fetchLabels = async () => {
+    setFetchingLabels(true);
+    try {
+      console.log("fetch Labels");
+      const submitedLogs = await publicClient.getLogs({
+        address: contractAddress,
+        event: parseAbiItem(
+          "event LabelSubmitted(address indexed owner, uint256 tokenId)"
+        ),
+        fromBlock: BigInt(Number(process.env.NEXT_PUBLIC_FROM_BLOCK)),
+      });
+
+      const allLabels = await Promise.all(
+        submitedLogs.map(async (log) => {
           const metadataUri = (await readContract({
             address: contractAddress,
             abi: labelAbi.abi,
@@ -96,57 +120,54 @@ export const LabelProvider = ({ children }: PropsWithChildren) => {
           });
           const metadata = fromBase64Uri(metadataUri) as Label;
           metadata.id = log.args.tokenId;
+          metadata.owner = log.args.owner;
           metadata.status = LabelStatus.SUBMITED;
           metadata.submitedDate = new Date(Number(block.timestamp) * 1000);
 
           return metadata;
         })
-      )
-    );
-  };
+      );
 
-  const fetchAllowedLabels = async () => {
-    console.log("fetch Labels");
-    const logs = await publicClient.getLogs({
-      address: contractAddress,
-      event: parseAbiItem(
-        "event LabelAllowed(uint256 indexed tokenId, bool indexed allowed)"
-      ),
-      fromBlock: BigInt(Number(process.env.NEXT_PUBLIC_FROM_BLOCK)),
-    });
-    setAllowedLabels(
-      await Promise.all(
-        logs
-          .filter((log) => log.args.allowed)
-          .map(async (log) => {
-            const metadataUri = (await readContract({
-              address: contractAddress,
-              abi: labelAbi.abi,
-              functionName: "tokenURI",
-              args: [log.args.tokenId],
-            })) as string;
-            const block = await publicClient.getBlock({
-              blockHash: log.blockHash,
-            });
-            const metadata = fromBase64Uri(metadataUri) as Label;
-            metadata.id = log.args.tokenId;
-            metadata.status = LabelStatus.ALLOWED;
-            metadata.submitedDate = new Date(Number(block.timestamp) * 1000);
+      const labelMap = allLabels.reduce(
+        (acc, label) => acc.set(label.id!, label),
+        new Map<bigint, Label>()
+      );
 
-            return metadata;
-          })
-      )
-    );
-  };
+      const allowedLogs = await publicClient.getLogs({
+        address: contractAddress,
+        event: parseAbiItem(
+          "event LabelAllowed(uint256 indexed tokenId, bool indexed allowed)"
+        ),
+        fromBlock: BigInt(Number(process.env.NEXT_PUBLIC_FROM_BLOCK)),
+      });
 
-  /**
-   *
-   */
-  const fetchLabels = async () => {
-    setFetchingLabels(true);
-    try {
-      await fetchSubmitedLabels();
-      await fetchAllowedLabels();
+      allowedLogs.forEach((log) => {
+        const labelId: bigint = log.args.tokenId as bigint;
+        labelMap.get(labelId)!.status = log.args.allowed
+          ? LabelStatus.ALLOWED
+          : LabelStatus.REVOKED;
+      });
+
+      const labelbyStatusMap = allLabels.reduce((acc, label) => {
+        if (label.status) {
+          const byStatus = acc.get(label.status) || [];
+          acc.set(label.status, [...byStatus, label]);
+        }
+        return acc;
+      }, new Map<LabelStatus, Array<Label>>());
+
+      const allowedLabels = labelbyStatusMap.get(LabelStatus.ALLOWED);
+      if (allowedLabels) {
+        setAllowedLabels(allowedLabels);
+      }
+      const submitedLabels = labelbyStatusMap.get(LabelStatus.SUBMITED);
+      if (submitedLabels) {
+        setSubmitedlabels(submitedLabels);
+      }
+      const revokedLabels = labelbyStatusMap.get(LabelStatus.REVOKED);
+      if (revokedLabels) {
+        setRevokedLabels(revokedLabels);
+      }
     } finally {
       setFetchingLabels(false);
       setRefresh(false);
@@ -190,6 +211,17 @@ export const LabelProvider = ({ children }: PropsWithChildren) => {
     const data = await waitForTransaction({ hash });
   };
 
+  const allowRevokeLabel = async (label: Label) => {
+    const { hash } = await writeContract({
+      address: contractAddress,
+      abi: labelAbi.abi,
+      functionName: "allowLabel",
+      args: [label.id, label.status !== LabelStatus.ALLOWED],
+    });
+
+    const data = await waitForTransaction({ hash });
+  };
+
   useEffect(() => {
     if (refresh) {
       fetchLabels();
@@ -205,8 +237,11 @@ export const LabelProvider = ({ children }: PropsWithChildren) => {
       value={{
         submitedlabels,
         allowedLabels,
+        revokedLabels,
         fetchingLabels,
+        isContractOwner,
         refreshLabels,
+        allowRevokeLabel,
         submitNewLabel,
       }}
     >

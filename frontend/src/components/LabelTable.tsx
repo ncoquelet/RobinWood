@@ -2,6 +2,8 @@ import React, { FC, PropsWithChildren } from "react";
 import { FaGear } from "react-icons/fa6";
 import { useFormatter } from "next-intl";
 import { useLabels } from "@/context/labelContext";
+import truncateEthAddress from "truncate-eth-address";
+
 import {
   Box,
   Heading,
@@ -47,6 +49,7 @@ const LabelTable: FC<LabelTableParams> = ({
           <Thead>
             <Tr>
               <Th>Id</Th>
+              <Th>Owner</Th>
               <Th>Name</Th>
               <Th>Submited Date</Th>
               <Th>Geographical Area</Th>
@@ -65,6 +68,7 @@ const LabelTable: FC<LabelTableParams> = ({
                   style={{ cursor: "pointer" }}
                 >
                   <Td>{`#${label.id}`}</Td>
+                  <Td>{truncateEthAddress(label.owner!)}</Td>
                   <Td>{label.name}</Td>
                   <Td>
                     {label.submitedDate

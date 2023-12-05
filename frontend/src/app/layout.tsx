@@ -61,7 +61,9 @@ export default function RootLayout({
           <WagmiConfig config={wagmiConfig}>
             <RainbowKitProvider chains={chains} modalSize="compact">
               <CacheProvider>
-                <ChakraProvider>
+                <ChakraProvider
+                  toastOptions={{ defaultOptions: { isClosable: true } }}
+                >
                   <NextIntlClientProvider locale="en" timeZone={timeZone}>
                     <main className="">
                       <div className=""></div>

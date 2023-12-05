@@ -28,8 +28,13 @@ import { useAccount } from "wagmi";
 
 export default function Label() {
   const { address, isDisconnected } = useAccount(); // TODO: Handle isDisconnected and redirects
-  const { submitedlabels, allowedLabels, fetchingLabels, refreshLabels } =
-    useLabels();
+  const {
+    submitedlabels,
+    allowedLabels,
+    revokedLabels,
+    fetchingLabels,
+    refreshLabels,
+  } = useLabels();
 
   const [label, setLabel] = useState<Label>();
 
@@ -61,8 +66,14 @@ export default function Label() {
             onRowClick={displayLabelDetails}
           />
           <LabelTable
-            name="Allowed lables"
+            name="Allowed labels"
             labelList={allowedLabels}
+            loading={fetchingLabels}
+            onRowClick={displayLabelDetails}
+          />
+          <LabelTable
+            name="Revoked labels"
+            labelList={revokedLabels}
             loading={fetchingLabels}
             onRowClick={displayLabelDetails}
           />

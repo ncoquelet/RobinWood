@@ -18,6 +18,7 @@ import {
   Select,
   Textarea,
   useDisclosure,
+  useToast,
 } from "@chakra-ui/react";
 import React, { FC, useRef, useState } from "react";
 import { FiPlus } from "react-icons/fi";
@@ -26,7 +27,8 @@ import { useForm } from "react-hook-form";
 import { LabelFormData, useLabels } from "@/context/labelContext";
 
 const AddLabel: FC = () => {
-  const { addNewLabel } = useLabels();
+  const toast = useToast();
+  const { submitNewLabel } = useLabels();
 
   const { isOpen, onOpen, onClose } = useDisclosure();
   const btnRef = useRef<HTMLButtonElement>(null);
@@ -45,11 +47,18 @@ const AddLabel: FC = () => {
   const handleFormSubmit = handleSubmit(async (data) => {
     setloading(true);
     try {
-      await addNewLabel(data);
+      await submitNewLabel(data);
       reset();
       onClose();
-    } catch (e) {
-      console.log("error " + e);
+    } catch (err) {
+      console.log("error " + err);
+      if (err instanceof Error) {
+        toast({
+          title: "Error",
+          description: err.message,
+          status: "error",
+        });
+      }
     } finally {
       setloading(false);
     }

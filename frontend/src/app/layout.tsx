@@ -31,7 +31,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   const { chains, publicClient } = configureChains(
-    [hardhat, sepolia, polygonMumbai],
+    [sepolia, hardhat, polygonMumbai],
     [
       alchemyProvider({
         apiKey: process.env.NEXT_PUBLIC_ALCHEMY_KEY as string,

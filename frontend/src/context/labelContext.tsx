@@ -21,13 +21,13 @@ export type LabelFormData = {
 
 type LabelContextProps = {
   labels: Array<Label>;
-  addNewLabel(label: LabelFormData): void;
+  submitNewLabel(label: LabelFormData): void;
 };
 
 // proposalcontext
 const LabelContext = createContext<LabelContextProps>({
   labels: [] as Array<Label>,
-  addNewLabel: () => {},
+  submitNewLabel: () => {},
 });
 
 export function useLabels() {
@@ -41,10 +41,10 @@ export const LabelProvider = ({ children }: PropsWithChildren) => {
   const [labels, setLabels] = useState<Array<Label>>([]);
 
   /**
-   * send a new proposal in the contract
-   * @param description the description
+   * submit a new label
+   * @param label
    */
-  const addNewLabel = async (label: LabelFormData) => {
+  const submitNewLabel = async (label: LabelFormData) => {
     const labelImageCid = await nftstorage.storeBlob(label.logo);
     const labelDocumentCid = await nftstorage.storeBlob(label.document);
 
@@ -63,7 +63,7 @@ export const LabelProvider = ({ children }: PropsWithChildren) => {
     // );
 
     const labelMetadataBase64 =
-      " data:application/json;base64," + btoa(JSON.stringify(labelMetadata));
+      "data:application/json;base64," + btoa(JSON.stringify(labelMetadata));
 
     const { hash } = await writeContract({
       address: contractAddress,
@@ -75,7 +75,7 @@ export const LabelProvider = ({ children }: PropsWithChildren) => {
   };
 
   return (
-    <LabelContext.Provider value={{ labels, addNewLabel }}>
+    <LabelContext.Provider value={{ labels, submitNewLabel }}>
       {children}
     </LabelContext.Provider>
   );

@@ -1,7 +1,15 @@
+"use client";
+
+import AddLabel from "@/components/AddLabel";
+import { LabelProvider } from "@/context/labelContext";
+
 export default function Label() {
   return (
     <div>
-      <p>Labels</p>
+      <LabelProvider>
+        <p>Labels</p>
+        <AddLabel />
+      </LabelProvider>
     </div>
   );
 }

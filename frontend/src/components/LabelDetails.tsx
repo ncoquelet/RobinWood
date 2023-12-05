@@ -23,11 +23,17 @@ import React, { FC, useEffect } from "react";
 
 interface LabelDetailsParams {
   label?: Label;
+  onClose(): void;
 }
 
-const LabelDetails: FC<LabelDetailsParams> = ({ label }) => {
+const LabelDetails: FC<LabelDetailsParams> = ({ label, onClose }) => {
   const { wrappeWithGateway } = useNftStorage();
-  const { isOpen, onOpen, onClose } = useDisclosure();
+  const { isOpen, onOpen, onClose: intClose } = useDisclosure();
+
+  const clearLabel = () => {
+    intClose();
+    onClose();
+  };
 
   useEffect(() => {
     if (label) {
@@ -36,7 +42,7 @@ const LabelDetails: FC<LabelDetailsParams> = ({ label }) => {
   }, [label]);
 
   return (
-    <Drawer isOpen={isOpen} placement="right" onClose={onClose} size="xl">
+    <Drawer isOpen={isOpen} placement="right" onClose={clearLabel} size="xl">
       <DrawerOverlay />
       <DrawerContent>
         <DrawerCloseButton />
@@ -73,7 +79,7 @@ const LabelDetails: FC<LabelDetailsParams> = ({ label }) => {
         )}
 
         <DrawerFooter>
-          <Button variant="outline" mr={3} onClick={onClose}>
+          <Button variant="outline" mr={3} onClick={clearLabel}>
             Close
           </Button>
         </DrawerFooter>

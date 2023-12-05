@@ -20,6 +20,7 @@ import {
   Skeleton,
   Stack,
   Text,
+  useDisclosure,
 } from "@chakra-ui/react";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { useState } from "react";
@@ -34,6 +35,10 @@ export default function Label() {
 
   const displayLabelDetails = (label: Label) => {
     setLabel(label);
+  };
+
+  const clearLabel = () => {
+    setLabel(undefined);
   };
 
   return (
@@ -61,7 +66,7 @@ export default function Label() {
             loading={fetchingLabels}
             onRowClick={displayLabelDetails}
           />
-          <LabelDetails label={label} />
+          <LabelDetails label={label} onClose={clearLabel} />
         </>
       )}
     </div>

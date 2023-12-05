@@ -24,33 +24,29 @@ import {
 } from "@chakra-ui/react";
 import React, { FC, useEffect, useState } from "react";
 
-interface LabelDetailsParams {
-  label?: Label;
-  onClose(): void;
-}
-
-const LabelDetails: FC<LabelDetailsParams> = ({ label, onClose }) => {
+const LabelDetails: FC = () => {
   const toast = useToast();
   const { wrappeWithGateway } = useNftStorage();
-  const { isContractOwner, allowRevokeLabel } = useLabels();
-  const { isOpen, onOpen, onClose: intClose } = useDisclosure();
+  const { currentLabel, isContractOwner, setCurrentLabel, allowRevokeLabel } =
+    useLabels();
+  const { isOpen, onOpen, onClose } = useDisclosure();
   const [loading, setLoading] = useState(false);
 
   const clearLabel = () => {
-    intClose();
+    setCurrentLabel(undefined);
     onClose();
   };
 
   useEffect(() => {
-    if (label) {
+    if (currentLabel) {
       onOpen();
     }
-  }, [label]);
+  }, [currentLabel]);
 
   const handleAllowRevokeLabel = async () => {
     setLoading(true);
     try {
-      await allowRevokeLabel(label!);
+      await allowRevokeLabel(currentLabel!);
     } catch (err) {
       if (err instanceof Error) {
         toast({
@@ -72,40 +68,57 @@ const LabelDetails: FC<LabelDetailsParams> = ({ label, onClose }) => {
           <DrawerCloseButton />
           <DrawerHeader>Label details</DrawerHeader>
 
-          {label && (
+          {currentLabel && (
             <DrawerBody>
               <FormControl>
                 <FormLabel>Label name</FormLabel>
-                <Input type="text" value={label.name} readOnly={true} />
+                <Input type="text" value={currentLabel.name} readOnly={true} />
               </FormControl>
               <FormControl>
                 <FormLabel>Owner</FormLabel>
-                <Input value={label.owner} size="sm" readOnly={true} />
+                <Input value={currentLabel.owner} size="sm" readOnly={true} />
               </FormControl>
               <FormControl>
                 <FormLabel>Description</FormLabel>
-                <Textarea value={label.description} size="sm" readOnly={true} />
+                <Textarea
+                  value={currentLabel.description}
+                  size="sm"
+                  readOnly={true}
+                />
               </FormControl>
               <FormControl>
                 <FormLabel>Geographical area</FormLabel>
                 <Input
-                  value={label.properties.geographic_area}
+                  value={currentLabel.properties.geographic_area}
                   readOnly={true}
                 />
               </FormControl>
               <FormControl>
                 <FormLabel>Logo</FormLabel>
-                <Image src={wrappeWithGateway(label.image)} width={150} />
+                <Image
+                  src={wrappeWithGateway(currentLabel.image)}
+                  width={150}
+                />
               </FormControl>
               <FormControl>
                 <FormLabel>Label Document</FormLabel>
                 <Link
-                  href={wrappeWithGateway(label.external_url)}
+                  href={wrappeWithGateway(currentLabel.external_url)}
                   isExternal={true}
                 >
-                  {label.external_url} <ExternalLinkIcon mx="2px" />
+                  {currentLabel.external_url} <ExternalLinkIcon mx="2px" />
                 </Link>
               </FormControl>
+              {currentLabel.status === LabelStatus.ALLOWED && (
+                <FormControl>
+                  <FormLabel>Certified Productors</FormLabel>
+                  <Textarea size="sm" readOnly={true}>
+                    0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266
+                    0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266
+                    0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266
+                  </Textarea>
+                </FormControl>
+              )}
             </DrawerBody>
           )}
 
@@ -118,11 +131,13 @@ const LabelDetails: FC<LabelDetailsParams> = ({ label, onClose }) => {
                 isLoading={loading}
                 loadingText="Allowing"
                 colorScheme={
-                  label?.status !== LabelStatus.ALLOWED ? "green" : "orange"
+                  currentLabel?.status !== LabelStatus.ALLOWED
+                    ? "green"
+                    : "orange"
                 }
                 onClick={handleAllowRevokeLabel}
               >
-                {label?.status !== LabelStatus.ALLOWED
+                {currentLabel?.status !== LabelStatus.ALLOWED
                   ? "Allow label"
                   : "Revoke label"}
               </Button>

@@ -33,18 +33,9 @@ export default function Label() {
     allowedLabels,
     revokedLabels,
     fetchingLabels,
+    setCurrentLabel,
     refreshLabels,
   } = useLabels();
-
-  const [label, setLabel] = useState<Label>();
-
-  const displayLabelDetails = (label: Label) => {
-    setLabel(label);
-  };
-
-  const clearLabel = () => {
-    setLabel(undefined);
-  };
 
   return (
     <div>
@@ -63,21 +54,21 @@ export default function Label() {
             name="Submitted labels"
             labelList={submitedlabels}
             loading={fetchingLabels}
-            onRowClick={displayLabelDetails}
+            onRowClick={setCurrentLabel}
           />
           <LabelTable
             name="Allowed labels"
             labelList={allowedLabels}
             loading={fetchingLabels}
-            onRowClick={displayLabelDetails}
+            onRowClick={setCurrentLabel}
           />
           <LabelTable
             name="Revoked labels"
             labelList={revokedLabels}
             loading={fetchingLabels}
-            onRowClick={displayLabelDetails}
+            onRowClick={setCurrentLabel}
           />
-          <LabelDetails label={label} onClose={clearLabel} />
+          <LabelDetails />
         </>
       )}
     </div>

@@ -21,7 +21,9 @@ import { useAccount, useContractRead, usePublicClient } from "wagmi";
 import useNftStorage from "@/hooks/useNftStorage";
 import useBase64 from "@/hooks/useBase64";
 import { Label } from "@/types";
-const contractAddress = process.env.NEXT_PUBLIC_CONTRACT_LABEL as Address;
+const labelContractAddress = process.env.NEXT_PUBLIC_CONTRACT_LABEL as Address;
+const labelDeliveryContractAddress = process.env
+  .NEXT_PUBLIC_CONTRACT_LABELDELIVERY as Address;
 
 export enum LabelStatus {
   SUBMITED = "SUBMITED",
@@ -38,11 +40,13 @@ export type LabelFormData = {
 };
 
 type LabelContextProps = {
+  currentLabel?: Label;
   submitedlabels: Array<Label>;
   allowedLabels: Array<Label>;
   revokedLabels: Array<Label>;
   fetchingLabels: boolean;
   isContractOwner: boolean;
+  setCurrentLabel(label: Label | undefined): void;
   submitNewLabel(label: LabelFormData): void;
   allowRevokeLabel(label: Label): void;
   refreshLabels(): void;
@@ -50,11 +54,13 @@ type LabelContextProps = {
 
 // proposalcontext
 const LabelContext = createContext<LabelContextProps>({
+  currentLabel: undefined,
   submitedlabels: [] as Array<Label>,
   allowedLabels: [] as Array<Label>,
   revokedLabels: [] as Array<Label>,
   fetchingLabels: false,
   isContractOwner: false,
+  setCurrentLabel: () => {},
   submitNewLabel: () => {},
   allowRevokeLabel: () => {},
   refreshLabels: () => {},
@@ -76,6 +82,7 @@ export const LabelProvider = ({ children }: PropsWithChildren) => {
   const [fetchingLabels, setFetchingLabels] = useState(false);
 
   // properties
+  const [currentLabel, setCurrentLabel] = useState<Label>();
   const [submitedlabels, setSubmitedlabels] = useState<Array<Label>>([]);
   const [allowedLabels, setAllowedLabels] = useState<Array<Label>>([]);
   const [revokedLabels, setRevokedLabels] = useState<Array<Label>>([]);
@@ -86,7 +93,7 @@ export const LabelProvider = ({ children }: PropsWithChildren) => {
     isLoading: isLoadingOwner,
     refetch,
   } = useContractRead({
-    address: contractAddress as Address,
+    address: labelContractAddress as Address,
     abi: labelAbi.abi,
     functionName: "owner",
   });
@@ -100,7 +107,7 @@ export const LabelProvider = ({ children }: PropsWithChildren) => {
     try {
       console.log("fetch Labels");
       const submitedLogs = await publicClient.getLogs({
-        address: contractAddress,
+        address: labelContractAddress,
         event: parseAbiItem(
           "event LabelSubmitted(address indexed owner, uint256 tokenId)"
         ),
@@ -110,7 +117,7 @@ export const LabelProvider = ({ children }: PropsWithChildren) => {
       const allLabels = await Promise.all(
         submitedLogs.map(async (log) => {
           const metadataUri = (await readContract({
-            address: contractAddress,
+            address: labelContractAddress,
             abi: labelAbi.abi,
             functionName: "tokenURI",
             args: [log.args.tokenId],
@@ -134,7 +141,7 @@ export const LabelProvider = ({ children }: PropsWithChildren) => {
       );
 
       const allowedLogs = await publicClient.getLogs({
-        address: contractAddress,
+        address: labelContractAddress,
         event: parseAbiItem(
           "event LabelAllowed(uint256 indexed tokenId, bool indexed allowed)"
         ),
@@ -174,6 +181,8 @@ export const LabelProvider = ({ children }: PropsWithChildren) => {
     }
   };
 
+  const fetchLabelDelivery = () => {};
+
   /**
    * submit a new label
    * @param label
@@ -203,7 +212,7 @@ export const LabelProvider = ({ children }: PropsWithChildren) => {
       Buffer.from(JSON.stringify(labelMetadata)).toString("base64");
 
     const { hash } = await writeContract({
-      address: contractAddress,
+      address: labelContractAddress,
       abi: labelAbi.abi,
       functionName: "submitLabel",
       args: [labelMetadataBase64],
@@ -213,7 +222,7 @@ export const LabelProvider = ({ children }: PropsWithChildren) => {
 
   const allowRevokeLabel = async (label: Label) => {
     const { hash } = await writeContract({
-      address: contractAddress,
+      address: labelContractAddress,
       abi: labelAbi.abi,
       functionName: "allowLabel",
       args: [label.id, label.status !== LabelStatus.ALLOWED],
@@ -235,6 +244,8 @@ export const LabelProvider = ({ children }: PropsWithChildren) => {
   return (
     <LabelContext.Provider
       value={{
+        currentLabel,
+        setCurrentLabel,
         submitedlabels,
         allowedLabels,
         revokedLabels,

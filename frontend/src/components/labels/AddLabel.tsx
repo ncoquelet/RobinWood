@@ -1,5 +1,4 @@
 "use client";
-
 import {
   Box,
   Button,
@@ -11,8 +10,6 @@ import {
   DrawerHeader,
   DrawerOverlay,
   FormControl,
-  FormErrorMessage,
-  FormHelperText,
   FormLabel,
   Input,
   Select,
@@ -21,10 +18,11 @@ import {
   useToast,
 } from "@chakra-ui/react";
 import React, { FC, useRef, useState } from "react";
-import { FiPlus } from "react-icons/fi";
-import FileUpload from "../UI/FileUpload";
 import { useForm } from "react-hook-form";
+import { FiPlus } from "react-icons/fi";
+
 import { LabelFormData, useLabels } from "@/context/LabelContext";
+import FileUpload from "../UI/FileUpload";
 
 const AddLabel: FC = () => {
   const toast = useToast();

@@ -1,5 +1,5 @@
 import { Skeleton, Stack, Tbody, Td, Tr } from "@chakra-ui/react";
-import React, { FC } from "react";
+import { FC } from "react";
 
 interface LoadingTableRowParams {
   size: number;

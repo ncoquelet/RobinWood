@@ -1,5 +1,5 @@
-import { useLabels } from "@/context/LabelContext";
-import { useProducts } from "@/context/ProductContext";
+import React, { FC, useRef, useState } from "react";
+
 import {
   Box,
   Button,
@@ -18,10 +18,12 @@ import {
   useDisclosure,
   useToast,
 } from "@chakra-ui/react";
-import React, { FC, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { FiPlus } from "react-icons/fi";
-import FileUpload from "../UI/FileUpload";
+
+import FileUpload from "@/components/UI/FileUpload";
+import { useLabels } from "@/context/LabelContext";
+import { useProducts } from "@/context/ProductContext";
 
 export type ProductFormData = {
   name: string;

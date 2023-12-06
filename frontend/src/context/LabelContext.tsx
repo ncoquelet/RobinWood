@@ -7,21 +7,20 @@ import {
   useEffect,
   useState,
 } from "react";
-import {
-  fetchTransaction,
-  readContract,
-  waitForTransaction,
-  writeContract,
-} from "wagmi/actions";
 import { Address, parseAbiItem } from "viem";
+import { useAccount, useContractRead, usePublicClient } from "wagmi";
+import { readContract, waitForTransaction, writeContract } from "wagmi/actions";
+
+// hooks
+import useBase64 from "@/hooks/useBase64";
+import useNftStorage from "@/hooks/useNftStorage";
+
+//types
+import { Label } from "@/types";
 
 // Abis
 import labelAbi from "@/abi/Label.json";
 import labelDeliveryAbi from "@/abi/LabelDelivery.json";
-import { useAccount, useContractRead, usePublicClient } from "wagmi";
-import useNftStorage from "@/hooks/useNftStorage";
-import useBase64 from "@/hooks/useBase64";
-import { Label } from "@/types";
 const labelContractAddress = process.env.NEXT_PUBLIC_CONTRACT_LABEL as Address;
 const labelDeliveryContractAddress = process.env
   .NEXT_PUBLIC_CONTRACT_LABELDELIVERY as Address;

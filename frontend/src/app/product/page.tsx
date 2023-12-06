@@ -1,9 +1,7 @@
 "use client";
 
-import DisconnectedCard from "@/components/DisconnectedCard";
-import AddProduct from "@/components/products/AddProduct";
-import ProductTable from "@/components/products/ProductTable";
-import { useProducts } from "@/context/ProductContext";
+import { useAccount } from "wagmi";
+
 import {
   FormControl,
   FormLabel,
@@ -11,7 +9,11 @@ import {
   Heading,
   Switch,
 } from "@chakra-ui/react";
-import { useAccount } from "wagmi";
+
+import DisconnectedCard from "@/components/DisconnectedCard";
+import AddProduct from "@/components/products/AddProduct";
+import ProductTable from "@/components/products/ProductTable";
+import { useProducts } from "@/context/ProductContext";
 
 export default function Product() {
   const { isDisconnected } = useAccount();

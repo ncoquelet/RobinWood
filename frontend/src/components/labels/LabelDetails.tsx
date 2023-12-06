@@ -1,8 +1,7 @@
-import { LabelStatus, useLabels } from "@/context/LabelContext";
-import useNftStorage from "@/hooks/useNftStorage";
-import { Label } from "@/types";
-import { ExternalLinkIcon } from "@chakra-ui/icons";
+import { FC, useEffect, useState } from "react";
+import { Address } from "viem";
 
+import { ExternalLinkIcon } from "@chakra-ui/icons";
 import {
   Box,
   Button,
@@ -28,9 +27,10 @@ import {
   useDisclosure,
   useToast,
 } from "@chakra-ui/react";
-import React, { FC, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
-import { Address } from "viem";
+
+import { LabelStatus, useLabels } from "@/context/LabelContext";
+import useNftStorage from "@/hooks/useNftStorage";
 
 type CertifierFormData = {
   productor: Address;

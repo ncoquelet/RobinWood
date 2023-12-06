@@ -1,33 +1,20 @@
 "use client";
 
-import AddLabel from "@/components/labels/AddLabel";
-import DisconnectedCard from "@/components/DisconnectedCard";
-import LabelDetails from "@/components/labels/LabelDetails";
-import LabelTable from "@/components/labels/LabelTable";
+import { useAccount } from "wagmi";
+
 import {
-  LabelFormData,
-  LabelProvider,
-  useLabels,
-} from "@/context/LabelContext";
-import { Label } from "@/types";
-import {
-  Box,
-  Button,
-  Card,
-  CardBody,
   FormControl,
   FormLabel,
   HStack,
   Heading,
-  Skeleton,
-  Stack,
   Switch,
-  Text,
-  useDisclosure,
 } from "@chakra-ui/react";
-import { ConnectButton } from "@rainbow-me/rainbowkit";
-import { useState } from "react";
-import { useAccount } from "wagmi";
+
+import DisconnectedCard from "@/components/DisconnectedCard";
+import AddLabel from "@/components/labels/AddLabel";
+import LabelDetails from "@/components/labels/LabelDetails";
+import LabelTable from "@/components/labels/LabelTable";
+import { useLabels } from "@/context/LabelContext";
 
 export default function Label() {
   const { isDisconnected } = useAccount();

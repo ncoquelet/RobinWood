@@ -9,10 +9,11 @@ import { waitForTransaction, writeContract } from "wagmi/actions";
 import useBase64 from "@/hooks/useBase64";
 import useNftStorage from "@/hooks/useNftStorage";
 
-// Abis
+// types
 import { ProductFormData } from "@/components/products/AddProduct";
 import { Product } from "@/types";
 
+// Abis
 import merchandiseAbi from "@/abi/Merchandise.json";
 const merchandiseContractAddress = process.env
   .NEXT_PUBLIC_CONTRACT_MERCHANDISE as Address;

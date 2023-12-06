@@ -1,4 +1,7 @@
-import { Product } from "@/types";
+import { useFormatter } from "next-intl";
+import { FC } from "react";
+import truncateEthAddress from "truncate-eth-address";
+
 import {
   Box,
   Heading,
@@ -11,12 +14,11 @@ import {
   Thead,
   Tr,
 } from "@chakra-ui/react";
-import React, { FC } from "react";
-import LoadingTableRow from "../LoadingTableRow";
-import truncateEthAddress from "truncate-eth-address";
-import { useFormatter } from "next-intl";
-import useNftStorage from "@/hooks/useNftStorage";
 import { FaGear } from "react-icons/fa6";
+
+import useNftStorage from "@/hooks/useNftStorage";
+import { Product } from "@/types";
+import LoadingTableRow from "../LoadingTableRow";
 
 interface ProductTableParams {
   name: string;

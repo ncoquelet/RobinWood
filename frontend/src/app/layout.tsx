@@ -3,27 +3,22 @@
 import { Inter } from "next/font/google";
 
 // Wagmi & RainbowKit
+import { getDefaultWallets, RainbowKitProvider } from "@rainbow-me/rainbowkit";
 import "@rainbow-me/rainbowkit/styles.css";
-import {
-  ConnectButton,
-  getDefaultWallets,
-  RainbowKitProvider,
-} from "@rainbow-me/rainbowkit";
+import { hardhat, polygonMumbai, sepolia } from "@wagmi/core/chains";
 import { configureChains, createConfig, WagmiConfig } from "wagmi";
-import { hardhat, sepolia, polygonMumbai } from "@wagmi/core/chains";
-import { publicProvider } from "wagmi/providers/public";
 import { alchemyProvider } from "wagmi/providers/alchemy";
-import { jsonRpcProvider } from "@wagmi/core/providers/jsonRpc";
+import { publicProvider } from "wagmi/providers/public";
 
 // Styles
-import "./globals.css";
 import { CacheProvider } from "@chakra-ui/next-js";
 import { ChakraProvider } from "@chakra-ui/react";
+import "./globals.css";
 
 // Providers
+import { LabelProvider } from "@/context/LabelContext";
 import NotificationProvider from "@/context/NotificationContext";
 import { NextIntlClientProvider } from "next-intl";
-import { LabelProvider } from "@/context/LabelContext";
 
 const inter = Inter({ subsets: ["latin"] });
 const timeZone = "Europe/Paris";

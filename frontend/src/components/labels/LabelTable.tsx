@@ -1,14 +1,10 @@
-import React, { FC, PropsWithChildren } from "react";
-import { FaGear } from "react-icons/fa6";
 import { useFormatter } from "next-intl";
-import { useLabels } from "@/context/LabelContext";
+import { FC } from "react";
 import truncateEthAddress from "truncate-eth-address";
 
 import {
   Box,
   Heading,
-  Skeleton,
-  Stack,
   Table,
   TableCaption,
   TableContainer,
@@ -18,9 +14,11 @@ import {
   Thead,
   Tr,
 } from "@chakra-ui/react";
-import LoadingTableRow from "../LoadingTableRow";
+import { FaGear } from "react-icons/fa6";
+
 import useNftStorage from "@/hooks/useNftStorage";
 import { Label } from "@/types";
+import LoadingTableRow from "../LoadingTableRow";
 
 interface LabelTableParams {
   name: string;

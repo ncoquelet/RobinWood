@@ -1,17 +1,8 @@
 "use client";
 
-import NextLink from "next/link";
-import {
-  Box,
-  Flex,
-  HStack,
-  Heading,
-  Image,
-  Link,
-  Spacer,
-  VStack,
-} from "@chakra-ui/react";
+import { Flex, HStack, Heading, Image, Link, Spacer } from "@chakra-ui/react";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
+import NextLink from "next/link";
 
 export default function Header() {
   return (

@@ -1,5 +1,4 @@
 import {
-  Button,
   Card,
   CardBody,
   CardFooter,
@@ -10,7 +9,6 @@ import {
   Text,
 } from "@chakra-ui/react";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
-import React from "react";
 
 export default function DisconnectedCard() {
   return (

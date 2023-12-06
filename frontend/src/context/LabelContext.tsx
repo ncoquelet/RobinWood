@@ -199,6 +199,7 @@ export const LabelProvider = ({ children }: PropsWithChildren) => {
     });
 
     const certifiedAddrs = submitedLogs
+      .filter((log) => log.args.labelId === currentLabel?.id)
       .reduce((acc, log) => {
         if (log.args.actor) {
           log.args.certified

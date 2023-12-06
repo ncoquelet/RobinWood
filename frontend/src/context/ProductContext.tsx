@@ -1,6 +1,7 @@
 "use client";
 
 import { Product } from "@/types";
+import { log } from "console";
 import { PropsWithChildren, createContext, useContext, useState } from "react";
 
 export type ProductFormData = {
@@ -45,7 +46,9 @@ export const ProductProvider = ({ children }: PropsWithChildren) => {
   const [products, setProducts] = useState<Array<Product>>([]);
   const [filterMyProduct, setFilterMyProduct] = useState(false);
 
-  const mintNewTree = (product) => {};
+  const mintNewTree = (product: Product) => {
+    console.log(product);
+  };
 
   return (
     <ProductContext.Provider

@@ -1,3 +1,5 @@
+import { useLabels } from "@/context/LabelContext";
+import { useProducts } from "@/context/ProductContext";
 import {
   Box,
   Button,
@@ -17,11 +19,18 @@ import {
   useToast,
 } from "@chakra-ui/react";
 import React, { FC, useRef, useState } from "react";
+import { useForm } from "react-hook-form";
 import { FiPlus } from "react-icons/fi";
 import FileUpload from "../UI/FileUpload";
-import { useForm } from "react-hook-form";
-import { ProductFormData, useProducts } from "@/context/ProductContext";
-import { useLabels } from "@/context/LabelContext";
+
+export type ProductFormData = {
+  name: string;
+  description: string;
+  type: string;
+  labelId: bigint;
+  logo: File;
+  document: File;
+};
 
 const AddProduct: FC = () => {
   const toast = useToast();
@@ -45,7 +54,7 @@ const AddProduct: FC = () => {
   const handleFormSubmit = handleSubmit(async (data) => {
     setloading(true);
     try {
-      //await mintNewTree(data);
+      await mintNewTree(data);
       reset();
       onClose();
     } catch (err) {
@@ -126,7 +135,7 @@ const AddProduct: FC = () => {
                   <FormLabel>Label</FormLabel>
                   <Select
                     placeholder="Associate a label"
-                    {...register("label", {
+                    {...register("labelId", {
                       required: false,
                     })}
                   >

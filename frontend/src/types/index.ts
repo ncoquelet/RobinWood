@@ -22,13 +22,13 @@ type DefaultProductProperties = {
   label_id?: bigint;
 };
 
-type TreeProperties = DefaultProductProperties & {
+export type TreeProperties = DefaultProductProperties & {
   planting_date: Date;
   slaughter_date: Date;
   // classification: string;
   // geographic_area: string;
 };
-type MerchandiseProperties = DefaultProductProperties & {
+export type MerchandiseProperties = DefaultProductProperties & {
   type: string;
   // finishing: string;
   // density: string;
@@ -36,7 +36,7 @@ type MerchandiseProperties = DefaultProductProperties & {
   // dimension:string;
   // color:string;
 };
-type ProductProperties = DefaultProductProperties & {
+export type ProductProperties = DefaultProductProperties & {
   design: string;
   category: string;
   // finishing: string;
@@ -44,10 +44,11 @@ type ProductProperties = DefaultProductProperties & {
 export interface Product {
   id?: bigint;
   owner?: Address;
-  creation_date?: Date;
+  type: string;
   name: string;
   description: string;
-  image: IPFSUri;
+  creation_date?: Date;
+  image: IPFSUri | File;
   external_url: IPFSUri;
   properties: TreeProperties | MerchandiseProperties | ProductProperties;
 }

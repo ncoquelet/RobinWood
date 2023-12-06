@@ -195,7 +195,7 @@ const LabelDetails: FC = () => {
                       <FormLabel>Certified Productors</FormLabel>
                       <UnorderedList maxH={180} overflow={"auto"}>
                         {certifiedAddresses.map((address) => (
-                          <ListItem maxW={500}>
+                          <ListItem key={address} maxW={500}>
                             <Flex>
                               {address}
                               {isOwnerLabel && (

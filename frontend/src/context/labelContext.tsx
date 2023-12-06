@@ -205,7 +205,7 @@ export const LabelProvider = ({ children }: PropsWithChildren) => {
         return acc;
       }, new Map<Address, boolean>())
       .keys();
-    setCertifiedAddresses([...certifiedAddrs]);
+    setCertifiedAddresses(Array.from(certifiedAddrs));
 
     const isOwnerOfLabel = await readContract({
       address: labelContractAddress as Address,

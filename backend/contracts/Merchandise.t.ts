@@ -18,26 +18,7 @@ import {
 } from '../scripts/utils/fixtures'
 
 describe('contract', function () {
-  describe('Mint Merchandise', () => {
-    it('Should mint new merchandise as a certified producer of a label', async () => {
-      const { merchandiseC, prod1 } = await loadFixture(withCertifiedProductor)
-
-      await expect(
-        merchandiseC
-          .connect(prod1)
-          .mintWithLabel(MERCH_1_TREE.tokenUri, LABEL_1.id)
-      )
-        .to.be.emit(merchandiseC, 'MintedWithLabel')
-        .withArgs(prod1.address, LABEL_1.id, MERCH_1_TREE.id)
-      expect(await merchandiseC.ownerOf(MERCH_1_TREE.id)).to.be.equals(
-        prod1.address
-      )
-      expect(await merchandiseC.tokenURI(MERCH_1_TREE.id)).to.be.equals(
-        MERCH_1_TREE.tokenUri
-      )
-      expect(await merchandiseC.parentsOf(MERCH_1_TREE.id)).to.be.empty
-    })
-
+  describe('Revert Mint Merchandise', () => {
     it('Should revert when mint new merchandise as a non certified producer of a label', async () => {
       const { merchandiseC, prod1 } = await loadFixture(
         withAllowedCertifierLabel
@@ -48,6 +29,55 @@ describe('contract', function () {
       )
         .to.be.revertedWithCustomError(merchandiseC, 'NotCertified')
         .withArgs(prod1.address, LABEL_1.id)
+    })
+
+    it("Should revert when mint new merchandise from other merchandise I don't own", async () => {
+      const { merchandiseC, prod2 } = await loadFixture(
+        withCertifiedProductorAndMerchandise
+      )
+
+      await expect(
+        merchandiseC
+          .connect(prod2)
+          .mintWithParent(MERCH_2_BOARD.tokenUri, MERCH_1_TREE.id)
+      )
+        .to.be.revertedWithCustomError(merchandiseC, 'NotTheOwner')
+        .withArgs(prod2.address)
+    })
+
+    it("Should revert when mint new merchandise from others merchandises I don't own", async () => {
+      const { merchandiseC, prod2 } = await loadFixture(
+        withCertifiedProductorAndMerchandise
+      )
+
+      await expect(
+        merchandiseC
+          .connect(prod2)
+          .mintWithParents(MERCH_2_BOARD.tokenUri, [MERCH_1_TREE.id])
+      )
+        .to.be.revertedWithCustomError(merchandiseC, 'NotTheOwner')
+        .withArgs(prod2.address)
+    })
+  })
+
+  describe('Mint Merchandise', () => {
+    it('Should mint new merchandise as a certified producer of a label', async () => {
+      const { merchandiseC, prod1 } = await loadFixture(withCertifiedProductor)
+
+      await expect(
+        merchandiseC
+          .connect(prod1)
+          .mintWithLabel(MERCH_1_TREE.tokenUri, LABEL_1.id)
+      )
+        .to.be.emit(merchandiseC, 'Minted')
+        .withArgs(prod1.address, prod1.address, [], MERCH_1_TREE.id)
+      expect(await merchandiseC.ownerOf(MERCH_1_TREE.id)).to.be.equals(
+        prod1.address
+      )
+      expect(await merchandiseC.tokenURI(MERCH_1_TREE.id)).to.be.equals(
+        MERCH_1_TREE.tokenUri
+      )
+      expect(await merchandiseC.parentsOf(MERCH_1_TREE.id)).to.be.empty
     })
 
     it('Should mint new merchandise from other merchandise I own ', async () => {
@@ -73,18 +103,6 @@ describe('contract', function () {
       expect(await merchandiseC.ownerOf(MERCH_2_BOARD.id)).to.be.equals(
         prod1.address
       )
-    })
-
-    it('Should burn parent on mint', async () => {
-      const { merchandiseC, prod1, burnAddr } = await loadFixture(
-        withCertifiedProductorAndMerchandise
-      )
-
-      await merchandiseC
-        .connect(prod1)
-        .mintWithParent(MERCH_2_BOARD.tokenUri, MERCH_1_TREE.id)
-
-      expect(await merchandiseC.ownerOf(MERCH_1_TREE.id)).to.be.equal(burnAddr)
     })
 
     it('Should mint 2 merchandises from other merchandises I own ', async () => {
@@ -173,6 +191,20 @@ describe('contract', function () {
         .to.have.lengthOf(2)
         .eql([MERCH_2_BOARD.id, MERCH_2_BOARD2.id])
     })
+  })
+
+  describe('Burn Merchandise', () => {
+    it('Should burn parent on mint', async () => {
+      const { merchandiseC, prod1, burnAddr } = await loadFixture(
+        withCertifiedProductorAndMerchandise
+      )
+
+      await merchandiseC
+        .connect(prod1)
+        .mintWithParent(MERCH_2_BOARD.tokenUri, MERCH_1_TREE.id)
+
+      expect(await merchandiseC.ownerOf(MERCH_1_TREE.id)).to.be.equal(burnAddr)
+    })
 
     it('Should burn parents on mint', async () => {
       const { merchandiseC, prod1, burnAddr } = await loadFixture(
@@ -197,20 +229,6 @@ describe('contract', function () {
       expect(await merchandiseC.ownerOf(MERCH_2_BOARD2.id)).to.be.equal(
         burnAddr
       )
-    })
-
-    it("Should revert when mint new merchandise from other merchandise I don't own", async () => {
-      const { merchandiseC, prod2 } = await loadFixture(
-        withCertifiedProductorAndMerchandise
-      )
-
-      await expect(
-        merchandiseC
-          .connect(prod2)
-          .mintWithParent(MERCH_2_BOARD.tokenUri, MERCH_1_TREE.id)
-      )
-        .to.be.revertedWithCustomError(merchandiseC, 'NotOwner')
-        .withArgs(prod2.address, MERCH_1_TREE.id)
     })
   })
 
@@ -301,8 +319,8 @@ describe('contract', function () {
             .connect(prod2)
             .mandateTransport(transp1, transf1, MERCH_1_TREE.id)
         )
-          .to.be.revertedWithCustomError(merchandiseC, 'NotOwner')
-          .withArgs(prod2.address, MERCH_1_TREE.id)
+          .to.be.revertedWithCustomError(merchandiseC, 'NotTheOwner')
+          .withArgs(prod2.address)
       })
     })
 

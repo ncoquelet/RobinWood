@@ -8,6 +8,8 @@ abstract contract ERC6150plus is ERC721, IERC6150plus {
   mapping(uint256 => uint256[]) private _parentsOf;
   mapping(uint256 => uint256[]) private _childrenOf;
 
+  error NotTheOwner(address owner);
+
   constructor(string memory name_, string memory symbol_) ERC721(name_, symbol_) {}
 
   function parentsOf(uint256 tokenId) public view virtual override returns (uint256[] memory parentId) {
@@ -80,7 +82,9 @@ abstract contract ERC6150plus is ERC721, IERC6150plus {
       revert ERC6150InvalidParentLength(parentIds.length);
     }
     for (uint i; i < parentIds.length; i++) {
-      _requireOwned(parentIds[i]);
+      if (_requireOwned(parentIds[i]) != msg.sender) {
+        revert NotTheOwner(msg.sender);
+      }
     }
   }
 

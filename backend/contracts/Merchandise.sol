@@ -54,16 +54,25 @@ contract Merchandise is ERC6150plus {
     uint256 tokenId = _nextTokenId++;
     _setTokenURI(tokenId, _tokenUri);
     _mint(msg.sender, tokenId);
-    emit MintedWithLabel(msg.sender, _labelId, tokenId);
+    uint256[] memory parentdIds = new uint[](0);
+    emit Minted(msg.sender, msg.sender, parentdIds, tokenId);
   }
 
   function mintWithParent(string calldata _tokenUri, uint256 _merchandiseId) external {
-    _requireOwnerOf(_merchandiseId);
+    uint256[] memory parentIds = new uint256[](1);
+    parentIds[0] = _merchandiseId;
+    mintWithParents(_tokenUri, parentIds);
+  }
+
+  function mintWithParents(string calldata _tokenUri, uint256[] memory _parentIds) public {
+    _requiredParents(_parentIds);
 
     uint256 tokenId = _nextTokenId++;
     _setTokenURI(tokenId, _tokenUri);
-    _safeMintWithParent(msg.sender, _merchandiseId, tokenId);
-    _burnTo1(_merchandiseId);
+    _safeMintWithParents(msg.sender, _parentIds, tokenId);
+    for (uint i; i < _parentIds.length; i++) {
+      _burnTo1(_parentIds[i]);
+    }
   }
 
   function mintBatchWithParent(string[] calldata _tokenUris, uint256 _merchandiseId) external {
@@ -78,18 +87,7 @@ contract Merchandise is ERC6150plus {
     _burnTo1(_merchandiseId);
   }
 
-  function mintWithParents(string calldata _tokenUri, uint256[] memory _parentIds) external {
-    _requiredParents(_parentIds);
-
-    uint256 tokenId = _nextTokenId++;
-    _setTokenURI(tokenId, _tokenUri);
-    _safeMintWithParents(msg.sender, _parentIds, tokenId);
-    for (uint i; i < _parentIds.length; i++) {
-      _burnTo1(_parentIds[i]);
-    }
-  }
-
-  // ---------- mint --------
+  // ---------- TokenURI --------
 
   /**
    * @dev See {IERC721Metadata-tokenURI}.
@@ -169,8 +167,8 @@ contract Merchandise is ERC6150plus {
   // ---------- private --------
 
   function _requireOwnerOf(uint256 _merchandiseId) internal view {
-    if (_ownerOf(_merchandiseId) != msg.sender) {
-      revert NotOwner(msg.sender, _merchandiseId);
+    if (_requireOwned(_merchandiseId) != msg.sender) {
+      revert NotTheOwner(msg.sender);
     }
   }
 

@@ -1,14 +1,13 @@
 // We import Chai to use its asserting functions here.
-import { ethers } from 'hardhat'
-import { expect } from 'chai'
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers'
+import { expect } from 'chai'
+import { LABEL_1 } from '../scripts/utils/constants'
 import {
   deployLabelDeliveryContract,
   withAllowedCertifierLabel,
   withCertifiedProductor,
   withNotAllowedCertifierLabel,
-} from './utils/fixtures'
-import { LABEL_1 } from './utils/constants'
+} from '../scripts/utils/fixtures'
 
 describe('LabelDelivery contract', function () {
   describe('Deployment', function () {

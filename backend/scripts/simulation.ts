@@ -1,3 +1,4 @@
+import { HardhatEthersSigner } from '@nomicfoundation/hardhat-ethers/signers'
 import { ethers } from 'hardhat'
 import {
   ADDRESS_1,
@@ -9,11 +10,8 @@ import {
   MERCH_3_TABLE,
   MERCH_NAMES,
   Merch,
-} from '../test/utils/constants'
-import { getSign } from '../test/utils/crypto'
-import { HardhatEthersSigner } from '@nomicfoundation/hardhat-ethers/signers'
-import { TypedEventLog } from '../typechain-types/common'
-import { TransportMerchandiseEvent } from '../typechain-types/contracts/Merchandise'
+} from './utils/constants'
+import { getSign } from './utils/crypto'
 
 async function getActors() {
   // prettier-ignore

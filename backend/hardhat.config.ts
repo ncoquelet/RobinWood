@@ -1,12 +1,16 @@
-import { HardhatUserConfig } from 'hardhat/config'
-import '@nomicfoundation/hardhat-toolbox'
 import '@nomicfoundation/hardhat-ignition'
+import '@nomicfoundation/hardhat-toolbox'
 import '@nomicfoundation/hardhat-verify'
+import { HardhatUserConfig } from 'hardhat/config'
 import 'solidity-docgen'
 
 const { ACCOUNT0, ALCHEMY_SEPOLIA_RPC_URL, ETHERSCAN_ID } = process.env
 
 const config: HardhatUserConfig = {
+  paths: {
+    tests: './contracts',
+  },
+
   networks: {
     sepolia: {
       url: ALCHEMY_SEPOLIA_RPC_URL,

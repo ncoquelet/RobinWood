@@ -1,22 +1,21 @@
 // We import Chai to use its asserting functions here.
-import { ethers } from 'hardhat'
-import { expect } from 'chai'
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers'
+import { expect } from 'chai'
+import { ethers } from 'hardhat'
+import {
+  LABEL_1,
+  MERCH_1_TREE,
+  MERCH_2_BOARD,
+  MERCH_2_BOARD2,
+  MERCH_3_TABLE,
+  MandateStatus,
+} from '../scripts/utils/constants'
+import { getSign } from '../scripts/utils/crypto'
 import {
   withAllowedCertifierLabel,
   withCertifiedProductor,
   withCertifiedProductorAndMerchandise,
-} from './utils/fixtures'
-import {
-  LABEL_1,
-  MERCH_2_BOARD,
-  MERCH_1_TREE,
-  MandateStatus,
-  MERCH_2_BOARD2,
-  MERCH_3_TABLE,
-  ADDRESS_1,
-} from './utils/constants'
-import { getSign } from './utils/crypto'
+} from '../scripts/utils/fixtures'
 
 describe('contract', function () {
   describe('Mint Merchandise', () => {
@@ -85,9 +84,7 @@ describe('contract', function () {
         .connect(prod1)
         .mintWithParent(MERCH_2_BOARD.tokenUri, MERCH_1_TREE.id)
 
-      expect(await merchandiseC.ownerOf(MERCH_1_TREE.id)).to.be.equal(
-        burnAddr
-      )
+      expect(await merchandiseC.ownerOf(MERCH_1_TREE.id)).to.be.equal(burnAddr)
     })
 
     it('Should mint 2 merchandises from other merchandises I own ', async () => {
@@ -196,10 +193,10 @@ describe('contract', function () {
           MERCH_2_BOARD2.id,
         ])
 
-       expect(await merchandiseC.ownerOf(MERCH_2_BOARD.id)).to.be.equal(burnAddr)
-       expect(await merchandiseC.ownerOf(MERCH_2_BOARD2.id)).to.be.equal(
-         burnAddr
-       )
+      expect(await merchandiseC.ownerOf(MERCH_2_BOARD.id)).to.be.equal(burnAddr)
+      expect(await merchandiseC.ownerOf(MERCH_2_BOARD2.id)).to.be.equal(
+        burnAddr
+      )
     })
 
     it("Should revert when mint new merchandise from other merchandise I don't own", async () => {

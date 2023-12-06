@@ -1,4 +1,5 @@
 import { LabelStatus } from "@/context/LabelContext";
+import { ProductStatus } from "@/context/ProductContext";
 import { IPFSUri } from "@/hooks/useNftStorage";
 import { Address } from "viem";
 
@@ -44,6 +45,7 @@ export type ProductProperties = DefaultProductProperties & {
 export interface Product {
   id?: bigint;
   owner?: Address;
+  status?: ProductStatus;
   type: string;
   name: string;
   description: string;

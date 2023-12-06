@@ -1,9 +1,15 @@
 "use client";
 
-import { PropsWithChildren, createContext, useContext, useState } from "react";
-import { Address } from "viem";
+import {
+  PropsWithChildren,
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+} from "react";
+import { Address, parseAbiItem } from "viem";
 import { useAccount, usePublicClient } from "wagmi";
-import { waitForTransaction, writeContract } from "wagmi/actions";
+import { readContract, waitForTransaction, writeContract } from "wagmi/actions";
 
 // hooks
 import useBase64 from "@/hooks/useBase64";
@@ -17,6 +23,11 @@ import { Product } from "@/types";
 import merchandiseAbi from "@/abi/Merchandise.json";
 const merchandiseContractAddress = process.env
   .NEXT_PUBLIC_CONTRACT_MERCHANDISE as Address;
+
+export enum ProductStatus {
+  MINTED = "MINTED",
+  BURNED = "BURNED",
+}
 
 type ProductContextProps = {
   currentProduct?: Product;
@@ -49,7 +60,6 @@ export const ProductProvider = ({ children }: PropsWithChildren) => {
   const { fromBase64Uri, toBase64Uri } = useBase64();
 
   // refresh
-  const [refresh, setRefresh] = useState(true);
   const [fetchingProducts, setFetchingProducts] = useState(false);
 
   // properties
@@ -57,7 +67,57 @@ export const ProductProvider = ({ children }: PropsWithChildren) => {
   const [products, setProducts] = useState<Array<Product>>([]);
   const [filterMyProduct, setFilterMyProduct] = useState(false);
 
-  const fetchproduts = () => {};
+  const fetchproduts = async () => {
+    setFetchingProducts(true);
+    try {
+      console.log("fetch products");
+
+      const burnedLogs = await publicClient.getLogs({
+        address: merchandiseContractAddress,
+        event: parseAbiItem(
+          "event Burned(address indexed minter, uint256 tokenId)"
+        ),
+        fromBlock: BigInt(Number(process.env.NEXT_PUBLIC_FROM_BLOCK)),
+      });
+
+      const burnedIds = burnedLogs.map((log) => log.args.tokenId);
+
+      const mintedLogs = await publicClient.getLogs({
+        address: merchandiseContractAddress,
+        event: parseAbiItem(
+          "event Minted(address indexed minter, address indexed to, uint256[] parentId, uint256 tokenId)"
+        ),
+        fromBlock: BigInt(Number(process.env.NEXT_PUBLIC_FROM_BLOCK)),
+      });
+
+      const allProducts = await Promise.all(
+        mintedLogs
+          .filter((log) => burnedIds.indexOf(log.args.tokenId) === -1)
+          .map(async (log) => {
+            const metadataUri = (await readContract({
+              address: merchandiseContractAddress,
+              abi: merchandiseAbi.abi,
+              functionName: "tokenURI",
+              args: [log.args.tokenId],
+            })) as string;
+            const block = await publicClient.getBlock({
+              blockHash: log.blockHash,
+            });
+            const metadata = fromBase64Uri(metadataUri) as Product;
+            metadata.id = log.args.tokenId;
+            metadata.owner = log.args.to;
+            metadata.status = ProductStatus.MINTED;
+            metadata.creation_date = new Date(Number(block.timestamp) * 1000);
+
+            return metadata;
+          })
+      );
+
+      setProducts(allProducts);
+    } finally {
+      setFetchingProducts(false);
+    }
+  };
 
   const mintNewTree = async (product: ProductFormData) => {
     const directoryCid = await nftstorage.storeDirectory([
@@ -96,6 +156,10 @@ export const ProductProvider = ({ children }: PropsWithChildren) => {
     const data = await waitForTransaction({ hash });
     fetchproduts();
   };
+
+  useEffect(() => {
+    fetchproduts();
+  }, [filterMyProduct]);
 
   return (
     <ProductContext.Provider

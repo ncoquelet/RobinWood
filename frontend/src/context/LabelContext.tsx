@@ -88,7 +88,6 @@ export const LabelProvider = ({ children }: PropsWithChildren) => {
   const { fromBase64Uri, toBase64Uri } = useBase64();
 
   // refresh
-  const [refresh, setRefresh] = useState(true);
   const [fetchingLabels, setFetchingLabels] = useState(false);
 
   // properties
@@ -185,7 +184,6 @@ export const LabelProvider = ({ children }: PropsWithChildren) => {
       fetchMyLabels(allowedLabels);
     } finally {
       setFetchingLabels(false);
-      setRefresh(false);
     }
   };
 
@@ -238,7 +236,7 @@ export const LabelProvider = ({ children }: PropsWithChildren) => {
       .filter((log) => log.args.actor === address)
 
       .reduce((acc, log) => {
-        if (log.args.labelId) {
+        if (log.args.labelId != undefined) {
           log.args.certified
             ? acc.set(log.args.labelId, true)
             : acc.delete(log.args.labelId);

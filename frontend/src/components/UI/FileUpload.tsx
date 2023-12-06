@@ -1,15 +1,15 @@
 import {
-  Input,
   FormControl,
+  FormErrorMessage,
   FormLabel,
+  Icon,
+  Input,
   InputGroup,
   InputLeftElement,
-  FormErrorMessage,
-  Icon,
 } from "@chakra-ui/react";
-import { FiFile } from "react-icons/fi";
-import { Control, useController } from "react-hook-form";
 import { FC, PropsWithChildren, useRef } from "react";
+import { Control, useController } from "react-hook-form";
+import { FiFile } from "react-icons/fi";
 
 interface FileUploadParams extends PropsWithChildren {
   name: string;
@@ -19,10 +19,10 @@ interface FileUploadParams extends PropsWithChildren {
   isRequired: boolean;
 }
 
-export const FileUpload: FC<FileUploadParams> = ({
+const FileUpload: FC<FileUploadParams> = ({
   name,
   placeholder,
-  acceptedFileTypes,
+  acceptedFileTypes = "",
   control,
   children,
   isRequired = false,
@@ -65,11 +65,6 @@ export const FileUpload: FC<FileUploadParams> = ({
       <FormErrorMessage>{invalid}</FormErrorMessage>
     </FormControl>
   );
-};
-
-FileUpload.defaultProps = {
-  acceptedFileTypes: "",
-  //allowMultipleFiles: false,
 };
 
 export default FileUpload;

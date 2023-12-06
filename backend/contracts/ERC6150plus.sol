@@ -8,6 +8,13 @@ abstract contract ERC6150plus is ERC721, IERC6150plus {
   mapping(uint256 => uint256[]) private _parentsOf;
   mapping(uint256 => uint256[]) private _childrenOf;
 
+  /**
+   * @notice Emitted when `tokenId` token is burned.
+   * @param minter The address of burner
+   * @param tokenId The id of minted token, required to be greater than zero
+   */
+  event Burned(address indexed minter, uint256 tokenId);
+
   error NotTheOwner(address owner);
 
   constructor(string memory name_, string memory symbol_) ERC721(name_, symbol_) {}
@@ -93,5 +100,6 @@ abstract contract ERC6150plus is ERC721, IERC6150plus {
     if (previousOwner == address(0)) {
       revert ERC721NonexistentToken(tokenId);
     }
+    emit Burned(msg.sender, tokenId);
   }
 }

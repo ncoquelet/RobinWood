@@ -199,9 +199,13 @@ describe('contract', function () {
         withCertifiedProductorAndMerchandise
       )
 
-      await merchandiseC
-        .connect(prod1)
-        .mintWithParent(MERCH_2_BOARD.tokenUri, MERCH_1_TREE.id)
+      await expect(
+        merchandiseC
+          .connect(prod1)
+          .mintWithParent(MERCH_2_BOARD.tokenUri, MERCH_1_TREE.id)
+      )
+        .to.emit(merchandiseC, 'Burned')
+        .withArgs(prod1.address, MERCH_1_TREE.id)
 
       expect(await merchandiseC.ownerOf(MERCH_1_TREE.id)).to.be.equal(burnAddr)
     })
@@ -218,12 +222,18 @@ describe('contract', function () {
           MERCH_1_TREE.id
         )
 
-      await merchandiseC
-        .connect(prod1)
-        .mintWithParents(MERCH_3_TABLE.tokenUri, [
-          MERCH_2_BOARD.id,
-          MERCH_2_BOARD2.id,
-        ])
+      await expect(
+        merchandiseC
+          .connect(prod1)
+          .mintWithParents(MERCH_3_TABLE.tokenUri, [
+            MERCH_2_BOARD.id,
+            MERCH_2_BOARD2.id,
+          ])
+      )
+        .to.emit(merchandiseC, 'Burned')
+        .withArgs(prod1.address, MERCH_2_BOARD.id)
+        .to.emit(merchandiseC, 'Burned')
+        .withArgs(prod1.address, MERCH_2_BOARD2.id)
 
       expect(await merchandiseC.ownerOf(MERCH_2_BOARD.id)).to.be.equal(burnAddr)
       expect(await merchandiseC.ownerOf(MERCH_2_BOARD2.id)).to.be.equal(

@@ -178,9 +178,12 @@ export const LabelProvider = ({ children }: PropsWithChildren) => {
           return acc;
         }, new Map<LabelStatus, Array<Label>>());
 
-      setAllowedLabels(labelbyStatusMap.get(LabelStatus.ALLOWED) || []);
+      const allowedLabels = labelbyStatusMap.get(LabelStatus.ALLOWED) || [];
+      setAllowedLabels(allowedLabels);
       setSubmitedlabels(labelbyStatusMap.get(LabelStatus.SUBMITED) || []);
       setRevokedLabels(labelbyStatusMap.get(LabelStatus.REVOKED) || []);
+      // pas le temps je prends des raccourcis
+      fetchMyLabels(allowedLabels);
     } finally {
       setFetchingLabels(false);
       setRefresh(false);
@@ -219,6 +222,41 @@ export const LabelProvider = ({ children }: PropsWithChildren) => {
     });
 
     setIsOwnerLabel(isOwnerOfLabel == true);
+  };
+
+  const fetchMyLabels = async (allowedLabels: Array<Label>) => {
+    console.log("fetch my labels");
+    const submitedLogs = await publicClient.getLogs({
+      address: labelDeliveryContractAddress,
+      event: parseAbiItem(
+        "event Certified(address indexed actor, uint256 indexed labelId, bool certified)"
+      ),
+
+      fromBlock: BigInt(Number(process.env.NEXT_PUBLIC_FROM_BLOCK)),
+    });
+
+    const myLabelIds = submitedLogs
+      .filter((log) => log.args.actor === address)
+
+      .reduce((acc, log) => {
+        if (log.args.labelId) {
+          log.args.certified
+            ? acc.set(log.args.labelId, true)
+            : acc.delete(log.args.labelId);
+        }
+        return acc;
+      }, new Map<bigint, boolean>())
+      .keys();
+
+    const labelMap = allowedLabels.reduce(
+      (acc, label) => acc.set(label.id!, label),
+      new Map<bigint, Label>()
+    );
+
+    const myLabels = Array.from(myLabelIds).map((labelId) =>
+      labelMap.get(labelId)
+    ) as Array<Label>;
+    setProductorLabels(myLabels);
   };
 
   /**

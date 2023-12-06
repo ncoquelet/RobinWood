@@ -23,6 +23,7 @@ import { ChakraProvider } from "@chakra-ui/react";
 // Providers
 import NotificationProvider from "@/context/NotificationContext";
 import { NextIntlClientProvider } from "next-intl";
+import { LabelProvider } from "@/context/LabelContext";
 
 const inter = Inter({ subsets: ["latin"] });
 const timeZone = "Europe/Paris";
@@ -67,7 +68,9 @@ export default function RootLayout({
                   <NextIntlClientProvider locale="en" timeZone={timeZone}>
                     <main className="">
                       <div className=""></div>
-                      <NotificationProvider>{children}</NotificationProvider>
+                      <NotificationProvider>
+                        <LabelProvider>{children}</LabelProvider>
+                      </NotificationProvider>
                     </main>
                   </NextIntlClientProvider>
                 </ChakraProvider>

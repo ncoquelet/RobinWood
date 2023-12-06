@@ -1,14 +1,14 @@
 "use client";
 
-import AddLabel from "@/components/AddLabel";
+import AddLabel from "@/components/labels/AddLabel";
 import DisconnectedCard from "@/components/DisconnectedCard";
-import LabelDetails from "@/components/LabelDetails";
-import LabelTable from "@/components/LabelTable";
+import LabelDetails from "@/components/labels/LabelDetails";
+import LabelTable from "@/components/labels/LabelTable";
 import {
   LabelFormData,
   LabelProvider,
   useLabels,
-} from "@/context/labelContext";
+} from "@/context/LabelContext";
 import { Label } from "@/types";
 import {
   Box,
@@ -30,7 +30,7 @@ import { useState } from "react";
 import { useAccount } from "wagmi";
 
 export default function Label() {
-  const { address, isDisconnected } = useAccount(); // TODO: Handle isDisconnected and redirects
+  const { isDisconnected } = useAccount();
   const {
     submitedlabels,
     allowedLabels,

@@ -1,4 +1,4 @@
-import { LabelProvider } from "@/context/labelContext";
+import { LabelProvider } from "@/context/LabelContext";
 import React, { FC, PropsWithChildren } from "react";
 
 const layout: FC<PropsWithChildren> = ({ children }) => {

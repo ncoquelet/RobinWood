@@ -49,6 +49,7 @@ type LabelContextProps = {
   fetchingLabels: boolean;
   isContractOwner: boolean;
   certifiedAddresses: Array<Address>;
+  productorLabels: Array<Label>;
   certifyAddress(productor: Address, label: Label): void;
   revokeAddress(productor: Address, label: Label): void;
   setCurrentLabel(label: Label | undefined): void;
@@ -57,7 +58,7 @@ type LabelContextProps = {
   allowRevokeLabel(label: Label): void;
 };
 
-// proposalcontext
+// label context
 const LabelContext = createContext<LabelContextProps>({
   currentLabel: undefined,
   isOwnerLabel: false,
@@ -67,6 +68,7 @@ const LabelContext = createContext<LabelContextProps>({
   fetchingLabels: false,
   isContractOwner: false,
   certifiedAddresses: [] as Array<Address>,
+  productorLabels: [] as Array<Label>,
   certifyAddress: () => {},
   revokeAddress: () => {},
   setCurrentLabel: () => {},
@@ -97,6 +99,7 @@ export const LabelProvider = ({ children }: PropsWithChildren) => {
   const [submitedlabels, setSubmitedlabels] = useState<Array<Label>>([]);
   const [allowedLabels, setAllowedLabels] = useState<Array<Label>>([]);
   const [revokedLabels, setRevokedLabels] = useState<Array<Label>>([]);
+  const [productorLabels, setProductorLabels] = useState<Array<Label>>([]);
   const [certifiedAddresses, setCertifiedAddresses] = useState<Array<Address>>(
     []
   );
@@ -264,6 +267,7 @@ export const LabelProvider = ({ children }: PropsWithChildren) => {
     });
 
     const data = await waitForTransaction({ hash });
+    fetchLabels();
   };
 
   const certifyAddress = async (productor: Address, label: Label) => {
@@ -313,6 +317,7 @@ export const LabelProvider = ({ children }: PropsWithChildren) => {
         fetchingLabels,
         isContractOwner,
         certifiedAddresses,
+        productorLabels,
         certifyAddress,
         revokeAddress,
         allowRevokeLabel,

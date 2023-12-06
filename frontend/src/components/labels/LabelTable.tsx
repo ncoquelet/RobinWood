@@ -1,7 +1,7 @@
 import React, { FC, PropsWithChildren } from "react";
 import { FaGear } from "react-icons/fa6";
 import { useFormatter } from "next-intl";
-import { useLabels } from "@/context/labelContext";
+import { useLabels } from "@/context/LabelContext";
 import truncateEthAddress from "truncate-eth-address";
 
 import {
@@ -18,7 +18,7 @@ import {
   Thead,
   Tr,
 } from "@chakra-ui/react";
-import LoadingTableRow from "./LoadingTableRow";
+import LoadingTableRow from "../LoadingTableRow";
 import useNftStorage from "@/hooks/useNftStorage";
 import { Label } from "@/types";
 
@@ -57,7 +57,7 @@ const LabelTable: FC<LabelTableParams> = ({
             </Tr>
           </Thead>
           {loading ? (
-            <LoadingTableRow size={3} span={5} />
+            <LoadingTableRow size={3} span={6} />
           ) : (
             <Tbody>
               {labelList.map((label) => (

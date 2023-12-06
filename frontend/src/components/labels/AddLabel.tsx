@@ -22,19 +22,15 @@ import {
 } from "@chakra-ui/react";
 import React, { FC, useRef, useState } from "react";
 import { FiPlus } from "react-icons/fi";
-import FileUpload from "./UI/FileUpload";
+import FileUpload from "../UI/FileUpload";
 import { useForm } from "react-hook-form";
-import { LabelFormData, useLabels } from "@/context/labelContext";
+import { LabelFormData, useLabels } from "@/context/LabelContext";
 
 const AddLabel: FC = () => {
   const toast = useToast();
-  const { submitNewLabel } = useLabels();
-
   const { isOpen, onOpen, onClose } = useDisclosure();
   const btnRef = useRef<HTMLButtonElement>(null);
   const firstField = React.useRef<HTMLInputElement>(null);
-  const [loading, setloading] = useState(false);
-
   const {
     register,
     handleSubmit,
@@ -43,6 +39,9 @@ const AddLabel: FC = () => {
     control,
     formState: { errors, isSubmitting },
   } = useForm<LabelFormData>();
+
+  const [loading, setloading] = useState(false);
+  const { submitNewLabel } = useLabels();
 
   const handleFormSubmit = handleSubmit(async (data) => {
     setloading(true);

@@ -1,4 +1,4 @@
-import { LabelStatus, useLabels } from "@/context/labelContext";
+import { LabelStatus, useLabels } from "@/context/LabelContext";
 import useNftStorage from "@/hooks/useNftStorage";
 import { Label } from "@/types";
 import { ExternalLinkIcon } from "@chakra-ui/icons";
@@ -94,7 +94,7 @@ const LabelDetails: FC = () => {
     setLoading(true);
     try {
       resetField("productor");
-      await revokeAddress(data.productor, currentLabel!);
+      await certifyAddress(data.productor, currentLabel!);
     } catch (err) {
       if (err instanceof Error) {
         toast({

@@ -1,5 +1,8 @@
 import { HardhatEthersSigner } from '@nomicfoundation/hardhat-ethers/signers'
+import 'dotenv/config'
+import { readFileSync } from 'fs'
 import { ethers } from 'hardhat'
+import { File, NFTStorage } from 'nft.storage'
 import {
   ADDRESS_1,
   LABEL_1,
@@ -12,6 +15,21 @@ import {
   Merch,
 } from './utils/constants'
 import { getSign } from './utils/crypto'
+
+const formatIpfsUri = (cid: string, filename?: string): string => {
+  if (filename) {
+    cid = `${cid}/${filename}`
+  }
+  return `ipfs://${cid}`
+}
+
+function initNftStorage() {
+  const nftStorage = new NFTStorage({
+    token: process.env.NFTSTORAGE_KEY as string,
+  })
+
+  return nftStorage
+}
 
 async function getActors() {
   // prettier-ignore
@@ -43,32 +61,40 @@ async function getActors() {
 
 async function deployContracts() {
   const actors = await getActors()
-  console.log('\nDeploying  contract')
+  const nftStorage = initNftStorage()
+  console.log('\nConnecting to contract')
+  console.log(`Label: ${process.env.CONTRACT_LABEL}`)
+  console.log(`LabelDelivery: ${process.env.CONTRACT_LABELDELIVERY}`)
+  console.log(`Merchandise: ${process.env.CONTRACT_MERCHANDISE}`)
 
-  const label = await ethers.deployContract('Label')
-  await label.waitForDeployment()
-  console.log(`Label contract: ${await label.getAddress()}`)
+  const label = await ethers.getContractAt(
+    'Label',
+    process.env.CONTRACT_LABEL as string
+  )
+  const labelDelivery = await ethers.getContractAt(
+    'LabelDelivery',
+    process.env.CONTRACT_LABELDELIVERY as string
+  )
+  const merchandise = await ethers.getContractAt(
+    'Merchandise',
+    process.env.CONTRACT_MERCHANDISE as string
+  )
 
-  const labelDelivery = await ethers.deployContract('LabelDelivery', [
-    label.getAddress(),
-  ])
-  await labelDelivery.waitForDeployment()
-  console.log(`LabelDelivery contract: ${await labelDelivery.getAddress()}`)
-
-  const merchandise = await ethers.deployContract('Merchandise', [
-    labelDelivery.getAddress(),
-  ])
-  await merchandise.waitForDeployment()
-  console.log(`Merchandise contract: ${await merchandise.getAddress()}`)
-
-  return { ...actors, label, labelDelivery, merchandise }
+  return { ...actors, nftStorage, label, labelDelivery, merchandise }
 }
 
 async function addNewLabel(deployed: any) {
   const { label, labelDelivery, cert1, prod1 } = deployed
 
+  const labelMetadata = await generateMetadata(
+    'label.json',
+    'robinwood.png',
+    'RobinWood_LitePaper.pdf',
+    deployed
+  )
+
   console.log(`\nSubmit new label : OK`)
-  await label.connect(cert1).submitLabel(LABEL_1.name)
+  await label.connect(cert1).submitLabel(labelMetadata)
 
   console.log('List of submited labels')
   const submitedLabelfilter = label.filters.LabelSubmitted()
@@ -98,24 +124,65 @@ async function addNewLabel(deployed: any) {
 async function produceAndTransferTree(deployed: any) {
   const { merchandise, prod1, transf1, transp1 } = deployed
 
-  await merchandise
-    .connect(prod1)
-    .mintWithLabel(MERCH_1_TREE.tokenUri, LABEL_1.id)
+  const treeMetadata = await generateMetadata(
+    'tree.json',
+    'chene.png',
+    'RobinWood_LitePaper.pdf',
+    deployed
+  )
+  console.log(treeMetadata)
+
+  await merchandise.connect(prod1).mintWithLabel(treeMetadata, LABEL_1.id)
   console.log('\nProducer mint "New Tree": OK')
 
   console.log('\nProducer transfer tree to a transformer :')
   await transfer(prod1, transf1, transp1, MERCH_1_TREE, deployed)
 }
 
+async function generateMetadata(
+  json: string,
+  image: string,
+  document: string,
+  deployed: any
+) {
+  const { nftStorage } = deployed
+
+  const directoryCid = await nftStorage.storeDirectory([
+    new File([readFileSync('scripts/data/upload/' + image)], image),
+    new File([readFileSync('scripts/data/upload/' + document)], document),
+  ])
+  const board1Metadata = JSON.parse(
+    readFileSync('scripts/data/' + json).toString()
+  )
+  board1Metadata['image'] = formatIpfsUri(directoryCid, image)
+  board1Metadata['external_url'] = formatIpfsUri(directoryCid, document)
+
+  return (
+    'data:application/json;base64,' +
+    Buffer.from(JSON.stringify(board1Metadata)).toString('base64')
+  )
+}
+
 async function produceAndTransferBoards(deployed: any) {
   const { merchandise, nego1, transf1, transp1, fab1 } = deployed
 
+  const board1Metadata = await generateMetadata(
+    'board1.json',
+    'planche.jpg',
+    'RobinWood_LitePaper.pdf',
+    deployed
+  )
+
+  const board2Metadata = await generateMetadata(
+    'board2.json',
+    'planche.jpg',
+    'RobinWood_LitePaper.pdf',
+    deployed
+  )
+
   await merchandise
     .connect(transf1)
-    .mintBatchWithParent(
-      [MERCH_2_BOARD.tokenUri, MERCH_2_BOARD2.tokenUri],
-      MERCH_1_TREE.id
-    )
+    .mintBatchWithParent([board1Metadata, board2Metadata], MERCH_1_TREE.id)
   console.log('\nTransformer mint new boards from tree: OK')
 
   console.log('\nTransformer transfer boards to a trader :')
@@ -129,12 +196,17 @@ async function produceAndTransferBoards(deployed: any) {
 
 async function produceAndTransferTable(deployed: any) {
   const { merchandise, transp1, fab1, dist1 } = deployed
+
+  const tableMetadata = await generateMetadata(
+    'produit.json',
+    'table.jpg',
+    'RobinWood_LitePaper.pdf',
+    deployed
+  )
+
   await merchandise
     .connect(fab1)
-    .mintWithParents(MERCH_3_TABLE.tokenUri, [
-      MERCH_2_BOARD.id,
-      MERCH_2_BOARD2.id,
-    ])
+    .mintWithParents(tableMetadata, [MERCH_2_BOARD.id, MERCH_2_BOARD2.id])
   console.log('\nMaker mint new table from board: OK')
 
   console.log('\nMaker transfer table to a distributor :')

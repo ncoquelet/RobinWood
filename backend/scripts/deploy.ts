@@ -23,7 +23,7 @@ async function main() {
     `NEXT_PUBLIC_CONTRACT_LABELDELIVERY=${await labelDelivery.getAddress()}`
   )
   console.log(
-    `NEXT_PUBLIC_CONTRACT_MERCHANDISE= ${await merchandise.getAddress()}`
+    `NEXT_PUBLIC_CONTRACT_MERCHANDISE=${await merchandise.getAddress()}`
   )
 }
 

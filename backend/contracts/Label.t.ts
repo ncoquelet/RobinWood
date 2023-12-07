@@ -16,16 +16,18 @@ describe('contract', function () {
     it('Should submit a new label as a certifier', async () => {
       const { labelC, cert1, cert2 } = await loadFixture(deployLabelContract)
 
-      await expect(labelC.connect(cert1).submitLabel('new label'))
+      await expect(labelC.connect(cert1).submitLabel(LABEL_1.name))
         .to.emit(labelC, 'LabelSubmitted')
         .withArgs(cert1.address, LABEL_1.id)
 
+      expect(await labelC.tokenURI(LABEL_1.id)).to.be.equals(LABEL_1.name)
       expect(await labelC.ownerOf(LABEL_1.id)).to.be.equals(cert1.address)
 
-      await expect(labelC.connect(cert2).submitLabel('second label'))
+      await expect(labelC.connect(cert2).submitLabel(LABEL_2.name))
         .to.emit(labelC, 'LabelSubmitted')
         .withArgs(cert2.address, LABEL_2.id)
 
+      expect(await labelC.tokenURI(LABEL_2.id)).to.be.equals(LABEL_2.name)
       expect(await labelC.ownerOf(LABEL_2.id)).to.be.equals(cert2.address)
     })
 

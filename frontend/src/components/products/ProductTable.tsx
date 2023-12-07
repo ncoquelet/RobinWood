@@ -14,10 +14,10 @@ import {
   Thead,
   Tr,
 } from "@chakra-ui/react";
-import { FaGear } from "react-icons/fa6";
 
 import useNftStorage from "@/hooks/useNftStorage";
 import { Product } from "@/types";
+import { InfoOutlineIcon } from "@chakra-ui/icons";
 import LoadingTableRow from "../LoadingTableRow";
 
 interface ProductTableParams {
@@ -51,6 +51,7 @@ const ProductTable: FC<ProductTableParams> = ({
               <Th>Name</Th>
               <Th>Creation Date</Th>
               <Th>Document</Th>
+              <Th></Th>
             </Tr>
           </Thead>
           {loading ? (
@@ -78,7 +79,7 @@ const ProductTable: FC<ProductTableParams> = ({
                   </Td>
                   <Td>{truncateCid(product.external_url)}</Td>
                   <Td>
-                    <FaGear />
+                    <InfoOutlineIcon />
                   </Td>
                 </Tr>
               ))}

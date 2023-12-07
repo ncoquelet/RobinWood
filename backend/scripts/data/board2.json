@@ -1,0 +1,15 @@
+{
+  "name": "Planche 2",
+  "description": "Un planche de chêne",
+  "type": "merchandise",
+  "image": "url...",
+  "external_url": "url...",
+  "properties": {
+    "type": "Planche",
+    "finishing": "Brute",
+    "density": "0,85 g/cm3",
+    "resistance": "dur",
+    "dimension": "2600x500x50",
+    "color": "Naturelle"
+  }
+}

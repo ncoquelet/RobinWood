@@ -127,12 +127,12 @@ export const LabelProvider = ({ children }: PropsWithChildren) => {
 
       const allLabels = await Promise.all(
         submitedLogs.map(async (log) => {
-          const metadataUri = (await readContract({
+          const metadataUri = await readContract({
             address: labelContractAddress,
             abi: labelAbi.abi,
             functionName: "tokenURI",
             args: [log.args.tokenId],
-          })) as string;
+          });
           const block = await publicClient.getBlock({
             blockHash: log.blockHash,
           });

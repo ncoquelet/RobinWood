@@ -1,0 +1,13 @@
+{
+  "name": "Arbre 1",
+  "description": "Un très jolie arbre ",
+  "type": "tree",
+  "image": "url...",
+  "external_url": "url...",
+  "properties": {
+    "planting_date": "1626264723",
+    "slaughter_date": "1699351724",
+    "classification": "Chêne",
+    "geographic_area": "Europe"
+  }
+}

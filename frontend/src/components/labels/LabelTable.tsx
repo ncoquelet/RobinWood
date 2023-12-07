@@ -14,10 +14,10 @@ import {
   Thead,
   Tr,
 } from "@chakra-ui/react";
-import { FaGear } from "react-icons/fa6";
 
 import useNftStorage from "@/hooks/useNftStorage";
 import { Label } from "@/types";
+import { InfoOutlineIcon } from "@chakra-ui/icons";
 import LoadingTableRow from "../LoadingTableRow";
 
 interface LabelTableParams {
@@ -52,6 +52,7 @@ const LabelTable: FC<LabelTableParams> = ({
               <Th>Submited Date</Th>
               <Th>Geographical Area</Th>
               <Th>Document</Th>
+              <Th></Th>
             </Tr>
           </Thead>
           {loading ? (
@@ -80,7 +81,7 @@ const LabelTable: FC<LabelTableParams> = ({
                   <Td>{label.properties.geographic_area}</Td>
                   <Td>{truncateCid(label.external_url)}</Td>
                   <Td>
-                    <FaGear />
+                    <InfoOutlineIcon />
                   </Td>
                 </Tr>
               ))}

@@ -1,0 +1,12 @@
+{
+  "name": "Table",
+  "description": "Super table design MidCentury en chêne massif",
+  "type": "product",
+  "image": "url...",
+  "external_url": "url...",
+  "properties": {
+    "design": "midcentury",
+    "category": "mobilier",
+    "finishing": "huilée"
+  }
+}

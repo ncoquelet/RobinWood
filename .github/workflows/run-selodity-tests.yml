@@ -1,0 +1,23 @@
+name: solidity-tests-action
+on: [push]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    name: A job to run RobinWood solidity tests
+    defaults:
+      run:
+        working-directory: ./backend
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v2
+        with:
+          node-version: ${{ matrix.node }}
+      - uses: actions/cache@v2
+        with:
+          path: "**/node_modules"
+          key: ${{ runner.os }}-modules-${{ hashFiles('**/package-lock.json') }}
+      - name: Install
+        run: npm install
+      - name: Run tests
+        run: npm test

@@ -9,11 +9,11 @@ jobs:
       run:
         working-directory: ./backend
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-node@v2
+      - uses: actions/checkout@main
+      - uses: actions/setup-node@v3
         with:
-          node-version: v18.18.2
-      - uses: actions/cache@v2
+          node-version: "18.x"
+      - uses: actions/cache@main
         with:
           path: "**/node_modules"
           key: ${{ runner.os }}-modules-${{ hashFiles('**/package-lock.json') }}

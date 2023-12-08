@@ -20,7 +20,7 @@ const config: HardhatUserConfig = {
   },
 
   etherscan: {
-    apiKey: ETHERSCAN_ID,
+    apiKey: ETHERSCAN_API_KEY,
   },
 
   solidity: {

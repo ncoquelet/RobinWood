@@ -41,7 +41,7 @@ export async function withAllowedCertifierLabel() {
   return deployed
 }
 
-export async function withNotAllowedCertifierLabel() {
+export async function withSubmitedCertifierLabel() {
   const deployed = await deployLabelDeliveryContract()
 
   const { labelC, cert1 } = deployed

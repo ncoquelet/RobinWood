@@ -6,7 +6,7 @@ import {
   deployLabelDeliveryContract,
   withAllowedCertifierLabel,
   withCertifiedProductor,
-  withNotAllowedCertifierLabel,
+  withSubmitedCertifierLabel,
 } from '../scripts/utils/fixtures'
 
 describe('LabelDelivery contract', function () {
@@ -30,7 +30,7 @@ describe('LabelDelivery contract', function () {
 
     it('Should revert if label not allowed for certifier', async () => {
       const { labelC, labelDeliveryC, owner, cert1, cert2, prod1, prod2, pub } =
-        await loadFixture(withNotAllowedCertifierLabel)
+        await loadFixture(withSubmitedCertifierLabel)
 
       await expect(
         labelDeliveryC.connect(cert1).certify(prod1, LABEL_1.id)

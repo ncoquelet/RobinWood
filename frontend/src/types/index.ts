@@ -1,5 +1,8 @@
 import { LabelStatus } from "@/context/LabelContext";
-import { ProductStatus } from "@/context/ProductContext";
+import {
+  ProductStatus,
+  ProductTraceabilityType,
+} from "@/context/ProductContext";
 import { IPFSUri } from "@/hooks/useNftStorage";
 import { Address } from "viem";
 
@@ -54,3 +57,11 @@ export interface Product {
   external_url: IPFSUri;
   properties: TreeProperties | MerchandiseProperties | ProductProperties;
 }
+
+export type ProductTraceability = {
+  index: number;
+  tokenId: bigint;
+  owner: Address;
+  type: ProductTraceabilityType;
+  from: Array<Address> | Address;
+};

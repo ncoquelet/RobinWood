@@ -7,7 +7,7 @@ import {
   useEffect,
   useState,
 } from "react";
-import { Address, parseAbiItem } from "viem";
+import { Address, getAddress, parseAbiItem } from "viem";
 import { useAccount, usePublicClient } from "wagmi";
 import { readContract, waitForTransaction, writeContract } from "wagmi/actions";
 
@@ -17,7 +17,7 @@ import useNftStorage from "@/hooks/useNftStorage";
 
 // types
 import { ProductFormData } from "@/components/products/AddProduct";
-import { Product } from "@/types";
+import { Product, ProductTraceability } from "@/types";
 
 // Abis
 import merchandiseAbi from "@/abi/Merchandise.json";
@@ -29,11 +29,18 @@ export enum ProductStatus {
   BURNED = "BURNED",
 }
 
+export enum ProductTraceabilityType {
+  MINTED_WITH = "MINTED_WITH",
+  MINTED_FROM = "MINTED_FROM",
+  TRANSPORT = "TRANSPORT",
+}
+
 type ProductContextProps = {
   currentProduct?: Product;
   fetchingProducts: boolean;
   products: Array<Product>;
-  setCurrentProduct(product: Product): void;
+  productTraceability: Array<ProductTraceability>;
+  setCurrentProduct(product: Product | undefined): void;
   setFilterMyProduct(filter: boolean): void;
   mintNewTree(product: ProductFormData): void;
 };
@@ -43,10 +50,14 @@ const ProductContext = createContext<ProductContextProps>({
   currentProduct: undefined,
   fetchingProducts: false,
   products: [] as Array<Product>,
+  productTraceability: [] as Array<ProductTraceability>,
   setCurrentProduct: () => {},
   setFilterMyProduct: () => {},
   mintNewTree: () => {},
 });
+
+const ADDRESS_0 = getAddress("0x0000000000000000000000000000000000000000");
+const ADDRESS_1 = getAddress("0x0000000000000000000000000000000000000001");
 
 export function useProducts() {
   return useContext(ProductContext);
@@ -65,6 +76,9 @@ export const ProductProvider = ({ children }: PropsWithChildren) => {
   // properties
   const [currentProduct, setCurrentProduct] = useState<Product>();
   const [products, setProducts] = useState<Array<Product>>([]);
+  const [productTraceability, setProductTraceability] = useState<
+    Array<ProductTraceability>
+  >([]);
   const [filterMyProduct, setFilterMyProduct] = useState(false);
 
   const fetchproduts = async () => {
@@ -119,6 +133,87 @@ export const ProductProvider = ({ children }: PropsWithChildren) => {
     }
   };
 
+  const fetchProductTraceability = async () => {
+    if (currentProduct) {
+      const productTraceability = await getProductTraceability(
+        currentProduct.id as bigint,
+        0
+      );
+      setProductTraceability(productTraceability);
+    }
+  };
+
+  const getProductTraceability = async (
+    tokenId: bigint,
+    index: number
+  ): Promise<Array<ProductTraceability>> => {
+    const logs = (
+      await publicClient.getContractEvents({
+        abi: merchandiseAbi.abi,
+        address: merchandiseContractAddress,
+        eventName: "Transfer",
+        args: {
+          tokenId: tokenId,
+        },
+        fromBlock: BigInt(Number(process.env.NEXT_PUBLIC_FROM_BLOCK)),
+        strict: true,
+      })
+    ).reverse();
+
+    let productTraceability = [] as Array<ProductTraceability>;
+
+    for (let i = 0; i < logs.length; i++) {
+      const log = logs[i];
+
+      if (log.args.to === ADDRESS_1 || log.args.tokenId !== tokenId) {
+        continue;
+      }
+
+      if (log.args.from === ADDRESS_0) {
+        const parentIds = (await readContract({
+          address: merchandiseContractAddress,
+          abi: merchandiseAbi.abi,
+          functionName: "parentsOf",
+          args: [tokenId],
+        })) as [];
+
+        if (parentIds.length != 0) {
+          productTraceability.push({
+            tokenId: tokenId,
+            index: index,
+            type: ProductTraceabilityType.MINTED_FROM,
+            owner: log.args.to,
+            from: parentIds,
+          } as ProductTraceability);
+
+          for (let j = 0; j < parentIds.length; j++) {
+            productTraceability = productTraceability.concat(
+              await getProductTraceability(parentIds[j], index + 1)
+            );
+          }
+        } else {
+          productTraceability.push({
+            tokenId: tokenId,
+            index: index,
+            type: ProductTraceabilityType.MINTED_WITH,
+            owner: log.args.to,
+            from: [],
+          } as ProductTraceability);
+        }
+      } else {
+        productTraceability.push({
+          tokenId: tokenId,
+          index: index,
+          type: ProductTraceabilityType.TRANSPORT,
+          owner: log.args.to,
+          from: log.args.from,
+        } as ProductTraceability);
+      }
+    }
+
+    return productTraceability;
+  };
+
   const mintNewTree = async (product: ProductFormData) => {
     const directoryCid = await nftstorage.storeDirectory([
       product.logo,
@@ -138,10 +233,6 @@ export const ProductProvider = ({ children }: PropsWithChildren) => {
       },
     };
 
-    // const productMetadataCid = await nftstorage.storeBlob(
-    //   new Blob([JSON.stringify(productMetadata)])
-    // );
-
     const productMetadataBase64 =
       "data:application/json;base64," +
       Buffer.from(JSON.stringify(productMetadata)).toString("base64");
@@ -158,6 +249,12 @@ export const ProductProvider = ({ children }: PropsWithChildren) => {
   };
 
   useEffect(() => {
+    if (currentProduct) {
+      fetchProductTraceability();
+    }
+  }, [currentProduct]);
+
+  useEffect(() => {
     fetchproduts();
   }, [filterMyProduct]);
 
@@ -166,6 +263,7 @@ export const ProductProvider = ({ children }: PropsWithChildren) => {
       value={{
         currentProduct,
         products,
+        productTraceability,
         fetchingProducts,
         mintNewTree,
         setCurrentProduct,

@@ -12,6 +12,7 @@ import {
 
 import DisconnectedCard from "@/components/DisconnectedCard";
 import AddProduct from "@/components/products/AddProduct";
+import ProductDetails from "@/components/products/ProductDetails";
 import ProductTable from "@/components/products/ProductTable";
 import { useProducts } from "@/context/ProductContext";
 
@@ -45,6 +46,7 @@ export default function Product() {
               loading={fetchingProducts}
               onRowClick={setCurrentProduct}
             />
+            <ProductDetails />
           </>
         )}
       </div>

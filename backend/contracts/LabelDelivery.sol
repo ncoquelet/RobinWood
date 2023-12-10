@@ -11,6 +11,8 @@ contract LabelDelivery is ERC1155 {
 
   error NotAllowedLabel();
   error NotTransferable(address actor);
+  error AlreadyCertified(address actor);
+  error NotCertified(address actor);
 
   // ---------- modifier ----------
 
@@ -28,17 +30,19 @@ contract LabelDelivery is ERC1155 {
   }
 
   function certify(address _actor, uint256 _labelId) external allowedLabelOnly(_labelId) {
-    if (balanceOf(_actor, _labelId) == 0) {
-      _mint(_actor, _labelId, 1, "");
-      emit Certified(_actor, _labelId, true);
+    if (balanceOf(_actor, _labelId) > 0) {
+      revert AlreadyCertified(_actor);
     }
+    _mint(_actor, _labelId, 1, "");
+    emit Certified(_actor, _labelId, true);
   }
 
   function revoke(address _actor, uint256 _labelId) external allowedLabelOnly(_labelId) {
-    if (balanceOf(_actor, _labelId) > 0) {
+    if (balanceOf(_actor, _labelId) == 0) {
+      revert NotCertified(_actor);
+    }
       _burn(_actor, _labelId, 1);
       emit Certified(_actor, _labelId, false);
-    }
   }
 
   function isCertified(address _actor, uint256 _labelId) external view returns (bool) {

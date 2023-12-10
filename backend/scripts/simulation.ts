@@ -46,7 +46,7 @@ async function getActors() {
 
   console.log('\nCreating Actors :')
   Object.entries(ACTORNAMES).forEach(([address, title]) => {
-    console.log(`${title}: ${address}`)
+    //console.log(`${title}: ${address}`)
   })
 
   function nameOf(signer: HardhatEthersSigner | string) {
@@ -63,9 +63,9 @@ async function deployContracts() {
   const actors = await getActors()
   const nftStorage = initNftStorage()
   console.log('\nConnecting to contract')
-  console.log(`Label: ${process.env.CONTRACT_LABEL}`)
-  console.log(`LabelDelivery: ${process.env.CONTRACT_LABELDELIVERY}`)
-  console.log(`Merchandise: ${process.env.CONTRACT_MERCHANDISE}`)
+  //console.log(`Label: ${process.env.CONTRACT_LABEL}`)
+  //console.log(`LabelDelivery: ${process.env.CONTRACT_LABELDELIVERY}`)
+  //console.log(`Merchandise: ${process.env.CONTRACT_MERCHANDISE}`)
 
   const label = await ethers.getContractAt(
     'Label',
@@ -130,7 +130,6 @@ async function produceAndTransferTree(deployed: any) {
     'RobinWood_LitePaper.pdf',
     deployed
   )
-  console.log(treeMetadata)
 
   await merchandise.connect(prod1).mintWithLabel(treeMetadata, LABEL_1.id)
   console.log('\nProducer mint "New Tree": OK')
@@ -292,10 +291,7 @@ async function main() {
   console.log(
     'Here is an example of wood traceability where a tree is transformed into a table after numerous exchanges between stakeholders.'
   )
-  console.log('\n--------------------------------------------')
-
   const deployed = await deployContracts()
-  console.log('\n--------------------------------------------')
   await addNewLabel(deployed)
   await produceAndTransferTree(deployed)
   await produceAndTransferBoards(deployed)

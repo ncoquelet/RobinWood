@@ -1,13 +1,13 @@
 ```mermaid
-flowchart RL
+flowchart BT
 
   robin([RobinWood])
   certif([Certificateur])
   expl([Acteurs])
 
-    label[Label]
-    labeld[LabelDelivery]
-    merch[Merchandise]
+  label[Label]
+  labeld[LabelDelivery]
+  merch[Merchandise]
 
   certif -->|"submitLabel(...)"| label
   robin --> |"allowLabel(...)"| label

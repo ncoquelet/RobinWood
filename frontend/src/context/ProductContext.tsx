@@ -163,7 +163,7 @@ export const ProductProvider = ({ children }: PropsWithChildren) => {
     let productTraceability = [] as Array<ProductTraceability>;
 
     for (let i = 0; i < logs.length; i++) {
-      const log = logs[i];
+      const log: any = logs[i];
 
       if (log.args.to === ADDRESS_1 || log.args.tokenId !== tokenId) {
         continue;

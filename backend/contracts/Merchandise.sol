@@ -28,7 +28,8 @@ contract Merchandise is ERC6150plus {
 
   uint256 private _nextTokenId;
   mapping(uint256 tokenId => string) private _tokenURIs;
-  mapping(uint256 labelId => mapping(address transporter => Mandate)) mandates;
+  mapping(uint256 tokenId => mapping(address transporter => Mandate)) mandates;
+  mapping(address owner => mapping(uint256 tokenId => bool)) isMandated;
 
   event MintedWithLabel(address indexed from, uint256 labelId, uint256 merchandiseId);
 
@@ -36,6 +37,7 @@ contract Merchandise is ERC6150plus {
 
   error NotCertified(address addr, uint256 labelId);
   error NotOwner(address addr, uint256 merchandiseId);
+  error AlreadyMandated(address addr, uint256 merchandiseId);
   error NotMandated(address addr, uint256 merchandiseId);
   error NotAccepted(address addr, uint256 merchandiseId);
   error NotReciever(address addr, uint256 merchandiseId);
@@ -124,6 +126,7 @@ contract Merchandise is ERC6150plus {
 
   function mandateTransport(address by, address to, uint256 _merchandiseId) external {
     _requireOwnerOf(_merchandiseId);
+    _requireMandatable(_merchandiseId);
     if (by == msg.sender || by == address(0)) {
       revert ERC721InvalidApprover(by);
     }
@@ -132,6 +135,7 @@ contract Merchandise is ERC6150plus {
     }
 
     mandates[_merchandiseId][by].to = to;
+    isMandated[msg.sender][_merchandiseId] = true;
     emit TransportMerchandise(_merchandiseId, msg.sender, by, to, MandateStatus.CREATED);
   }
 
@@ -170,6 +174,12 @@ contract Merchandise is ERC6150plus {
   function _requireOwnerOf(uint256 _merchandiseId) internal view {
     if (_requireOwned(_merchandiseId) != msg.sender) {
       revert NotTheOwner(msg.sender);
+    }
+  }
+
+  function _requireMandatable(uint256 _merchandiseId) internal view {
+    if (isMandated[msg.sender][_merchandiseId]) {
+      revert AlreadyMandated(msg.sender, _merchandiseId);
     }
   }
 

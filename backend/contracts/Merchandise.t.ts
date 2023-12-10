@@ -319,6 +319,24 @@ describe('contract', function () {
           .to.be.true
       })
 
+      it('Should revert when mandate an already mandated merchandise', async () => {
+        const { merchandiseC, prod1, transp1, transf1 } = await loadFixture(
+          withCertifiedProductorAndMerchandise
+        )
+
+        await merchandiseC
+          .connect(prod1)
+          .mandateTransport(transp1, transf1, MERCH_1_TREE.id)
+
+        await expect(
+          merchandiseC
+            .connect(prod1)
+            .mandateTransport(transp1, transf1, MERCH_1_TREE.id)
+        )
+          .to.be.revertedWithCustomError(merchandiseC, 'AlreadyMandated')
+          .withArgs(prod1.address, MERCH_1_TREE.id)
+      })
+
       it('Should revert when unauthorized user try to mandate merchandise', async () => {
         const { merchandiseC, prod2, transp1, transf1 } = await loadFixture(
           withCertifiedProductorAndMerchandise

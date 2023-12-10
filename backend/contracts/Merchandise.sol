@@ -40,6 +40,7 @@ contract Merchandise is ERC6150plus {
   error NotAccepted(address addr, uint256 merchandiseId);
   error NotReciever(address addr, uint256 merchandiseId);
   error WronnSignature();
+  error NotTransferable(address actor);
 
   constructor(address _labelDeliveryContract) ERC6150plus("RobinWood Merchandises", "RWM") {
     labelDelivery = LabelDelivery(_labelDeliveryContract);
@@ -192,5 +193,15 @@ contract Merchandise is ERC6150plus {
     if (hash.toEthSignedMessageHash().recover(mandates[_merchandiseId][by].transporterSign) == by) {
       revert WronnSignature();
     }
+  }
+
+  // ---------- override to avoid transfer --------
+
+  function transferFrom(address /*from*/, address /*to*/, uint256 /*tokenId*/) public view override(ERC721, IERC721) {
+    revert NotTransferable(msg.sender);
+  }
+
+  function safeTransferFrom(address /*from*/, address /*to*/, uint256 /*tokenId*/, bytes memory /*data*/) public view override(ERC721, IERC721) {
+    revert NotTransferable(msg.sender);
   }
 }

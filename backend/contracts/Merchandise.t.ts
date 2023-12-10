@@ -481,4 +481,55 @@ describe('contract', function () {
       })
     })
   })
+
+  describe('Transferable', function () {
+    it('Shoul revert on transfer', async () => {
+      const { merchandiseC, prod1, nego1 } = await loadFixture(
+        withCertifiedProductorAndMerchandise
+      )
+
+      await expect(
+        merchandiseC.connect(prod1).transferFrom(prod1, nego1, MERCH_1_TREE.id)
+      )
+        .to.be.revertedWithCustomError(merchandiseC, 'NotTransferable')
+        .withArgs(prod1.address)
+    })
+
+    it('Shoul revert on safe transfer', async () => {
+      const { merchandiseC, prod1, nego1 } = await loadFixture(
+        withCertifiedProductorAndMerchandise
+      )
+
+      await expect(
+        merchandiseC
+          .connect(prod1)
+          ['safeTransferFrom(address,address,uint256)'](
+            prod1,
+            nego1,
+            LABEL_1.id
+          )
+      )
+        .to.be.revertedWithCustomError(merchandiseC, 'NotTransferable')
+        .withArgs(prod1.address)
+    })
+
+    it('Shoul revert on transfer', async () => {
+      const { merchandiseC, prod1, nego1 } = await loadFixture(
+        withAllowedCertifierLabel
+      )
+
+      await expect(
+        merchandiseC
+          .connect(prod1)
+          ['safeTransferFrom(address,address,uint256,bytes)'](
+            prod1,
+            nego1,
+            LABEL_1.id,
+            '0x'
+          )
+      )
+        .to.be.revertedWithCustomError(merchandiseC, 'NotTransferable')
+        .withArgs(prod1.address)
+    })
+  })
 })

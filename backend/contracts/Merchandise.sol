@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: SEE LICENSE IN LICENSE
+// SPDX-License-Identifier: MIT
 pragma solidity 0.8.20;
 
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
@@ -8,6 +8,11 @@ import "@openzeppelin/contracts/utils/cryptography/MessageHashUtils.sol";
 import "./LabelDelivery.sol";
 import "./ERC6150plus.sol";
 
+/**
+ * @title RobinWood Merchandise
+ * @author Nicolas
+ * @notice Mint Merchandise and transfer them between actors
+ */
 contract Merchandise is ERC6150plus {
   using ECDSA for bytes32;
   using MessageHashUtils for bytes32;
@@ -31,8 +36,14 @@ contract Merchandise is ERC6150plus {
   mapping(uint256 tokenId => mapping(address transporter => Mandate)) mandates;
   mapping(address owner => mapping(uint256 tokenId => bool)) isMandated;
 
-  event MintedWithLabel(address indexed from, uint256 labelId, uint256 merchandiseId);
-
+  /**
+   * Event emitted when the transport status change
+   * @param _merchandiseId merchandise id
+   * @param from address of sender
+   * @param by address of transporter
+   * @param to address of recipient
+   * @param status trasnport status
+   */
   event TransportMerchandise(uint256 indexed _merchandiseId, address indexed from, address indexed by, address to, MandateStatus status);
 
   error NotCertified(address addr, uint256 labelId);
@@ -44,12 +55,21 @@ contract Merchandise is ERC6150plus {
   error WronnSignature();
   error NotTransferable(address actor);
 
+  /**
+   * @dev ERC721 contract with ERC6150plus
+   * @param _labelDeliveryContract LabelDelivery contract address
+   */
   constructor(address _labelDeliveryContract) ERC6150plus("RobinWood Merchandises", "RWM") {
     labelDelivery = LabelDelivery(_labelDeliveryContract);
   }
 
   // ---------- mint --------
 
+  /**
+   * @notice Mint a new merchandise with a label
+   * @param _tokenUri merchandise metadata as URI
+   * @param _labelId a label id
+   */
   function mintWithLabel(string calldata _tokenUri, uint256 _labelId) external {
     if (!labelDelivery.isCertified(msg.sender, _labelId)) {
       revert NotCertified(msg.sender, _labelId);
@@ -61,12 +81,24 @@ contract Merchandise is ERC6150plus {
     emit Minted(msg.sender, msg.sender, parentdIds, tokenId);
   }
 
+  /**
+   * @notice Mint a new merchandise from a merchandise
+   * @dev parent merchandise will be burn
+   * @param _tokenUri merchandise metadata as URI
+   * @param _merchandiseId a merchandise id
+   */
   function mintWithParent(string calldata _tokenUri, uint256 _merchandiseId) external {
     uint256[] memory parentIds = new uint256[](1);
     parentIds[0] = _merchandiseId;
     mintWithParents(_tokenUri, parentIds);
   }
 
+  /**
+   * @notice Mint a new merchandise from some merchandises
+   * @dev parents merchandise will be burn
+   * @param _tokenUri merchandise metadata as URI
+   * @param _parentIds list of merchandise id
+   */
   function mintWithParents(string calldata _tokenUri, uint256[] memory _parentIds) public {
     _requiredParents(_parentIds);
 
@@ -78,6 +110,12 @@ contract Merchandise is ERC6150plus {
     }
   }
 
+  /**
+   * @notice Mint some new merchandises from a merchandise
+   * @dev parents merchandise will be burn
+   * @param _tokenUris list of merchandise metadata URI
+   * @param _merchandiseId a merchandise id
+   */
   function mintBatchWithParent(string[] calldata _tokenUris, uint256 _merchandiseId) external {
     _requireOwnerOf(_merchandiseId);
 
@@ -124,6 +162,12 @@ contract Merchandise is ERC6150plus {
 
   // ---------- transport --------
 
+  /**
+   * @notice Mandate a transporter to transport your merchandise to a recipient
+   * @param by address of transporter
+   * @param to address of recipient
+   * @param _merchandiseId a merchandise id
+   */
   function mandateTransport(address by, address to, uint256 _merchandiseId) external {
     _requireOwnerOf(_merchandiseId);
     _requireMandatable(_merchandiseId);
@@ -139,10 +183,23 @@ contract Merchandise is ERC6150plus {
     emit TransportMerchandise(_merchandiseId, msg.sender, by, to, MandateStatus.CREATED);
   }
 
+  /**
+   * @notice Is mandate exist for a marchandise, a transporter and a recipient
+   * @param _merchandiseId merchandise id
+   * @param by address of transporter
+   * @param to address of recipient
+   * @return true or false
+   */
   function isMandate(uint256 _merchandiseId, address by, address to) external view returns (bool) {
     return mandates[_merchandiseId][by].to == to;
   }
 
+  /**
+   * @notice Accept the mandate
+   * @dev signature = keccak256(abi.encodePacked(merchandiseId, by, msg.sender, salt)
+   * @param sign the transporter signature
+   * @param _merchandiseId a merchandise id
+   */
   function acceptTransport(uint256 _merchandiseId, bytes calldata sign) external {
     _requireMandated(_merchandiseId);
 
@@ -151,10 +208,23 @@ contract Merchandise is ERC6150plus {
     emit TransportMerchandise(_merchandiseId, _ownerOf(_merchandiseId), msg.sender, mandates[_merchandiseId][msg.sender].to, MandateStatus.ACCEPTED);
   }
 
+  /**
+   * @notice Is mandate accepted for a marchandise, a transporter
+   * @param _merchandiseId merchandise id
+   * @param by address of transporter
+   * @return true or false
+   */
   function isMandateAccepted(uint256 _merchandiseId, address by) external view returns (bool) {
     return mandates[_merchandiseId][by].status == MandateStatus.ACCEPTED;
   }
 
+  /**
+   * @notice Validate the receipt of merchandise
+   * @dev prove that they are a physical exchange of salt to validate the receipt
+   * @param _merchandiseId a merchandise id
+   * @param by address of transporter
+   * @param _salt the salt use to sign
+   */
   function validateTransport(uint256 _merchandiseId, address by, bytes32 _salt) external {
     _requireToValidate(_merchandiseId, by);
     _requireValidSignature(_merchandiseId, by, _salt);
@@ -165,6 +235,12 @@ contract Merchandise is ERC6150plus {
     emit TransportMerchandise(_merchandiseId, previousOwner, by, msg.sender, MandateStatus.VALIDATED);
   }
 
+  /**
+   * @notice Is transport validated
+   * @param _merchandiseId merchandise id
+   * @param by address of transporter
+   * @return true or false
+   */
   function isTransportValidated(uint256 _merchandiseId, address by) external view returns (bool) {
     return mandates[_merchandiseId][by].status == MandateStatus.VALIDATED;
   }
@@ -207,10 +283,16 @@ contract Merchandise is ERC6150plus {
 
   // ---------- override to avoid transfer --------
 
+  /**
+   * @notice DISABLED, revert with NotTransferable
+   */
   function transferFrom(address /*from*/, address /*to*/, uint256 /*tokenId*/) public view override(ERC721, IERC721) {
     revert NotTransferable(msg.sender);
   }
 
+  /**
+   * @notice DISABLED, revert with NotTransferable
+   */
   function safeTransferFrom(address /*from*/, address /*to*/, uint256 /*tokenId*/, bytes memory /*data*/) public view override(ERC721, IERC721) {
     revert NotTransferable(msg.sender);
   }

@@ -226,7 +226,7 @@ contract Merchandise is ERC6150plus {
    * @param _salt the salt use to sign
    */
   function validateTransport(uint256 _merchandiseId, address by, bytes32 _salt) external {
-    _requireToValidate(_merchandiseId, by);
+    _requireValidable(_merchandiseId, by);
     _requireValidSignature(_merchandiseId, by, _salt);
 
     mandates[_merchandiseId][by].status = MandateStatus.VALIDATED;
@@ -247,25 +247,41 @@ contract Merchandise is ERC6150plus {
 
   // ---------- private --------
 
+  /**
+   * Check if merchandise is owned by sender
+   * @param _merchandiseId merchandise id
+   */
   function _requireOwnerOf(uint256 _merchandiseId) internal view {
     if (_requireOwned(_merchandiseId) != msg.sender) {
       revert NotTheOwner(msg.sender);
     }
   }
 
+  /**
+   * Check if merchandise can by mandated by sender
+   * @param _merchandiseId merchandise id
+   */
   function _requireMandatable(uint256 _merchandiseId) internal view {
     if (isMandated[msg.sender][_merchandiseId]) {
       revert AlreadyMandated(msg.sender, _merchandiseId);
     }
   }
 
+  /**
+   * Check if merchandise is mandated to be transported by sender
+   * @param _merchandiseId merchandise id
+   */
   function _requireMandated(uint256 _merchandiseId) internal view {
     if (mandates[_merchandiseId][msg.sender].to == address(0)) {
       revert NotMandated(msg.sender, _merchandiseId);
     }
   }
 
-  function _requireToValidate(uint256 _merchandiseId, address by) internal view {
+  /**
+   * Check if merchandise transport is ready to be validate by recipient
+   * @param _merchandiseId merchandise id
+   */
+  function _requireValidable(uint256 _merchandiseId, address by) internal view {
     if (mandates[_merchandiseId][by].to != msg.sender) {
       revert NotReciever(msg.sender, _merchandiseId);
     }
@@ -274,6 +290,12 @@ contract Merchandise is ERC6150plus {
     }
   }
 
+  /**
+   * Check if transporter signature is correct
+   * @param _merchandiseId merchandise id
+   * @param by the transporter address
+   * @param _salt the salt use by transporter to sign
+   */
   function _requireValidSignature(uint256 _merchandiseId, address by, bytes32 _salt) internal view {
     bytes32 hash = keccak256(abi.encodePacked(_merchandiseId, by, msg.sender, _salt));
     if (hash.toEthSignedMessageHash().recover(mandates[_merchandiseId][by].transporterSign) == by) {

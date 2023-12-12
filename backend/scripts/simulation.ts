@@ -46,7 +46,7 @@ async function getActors() {
 
   console.log('\nCreating Actors :')
   Object.entries(ACTORNAMES).forEach(([address, title]) => {
-    //console.log(`${title}: ${address}`)
+    console.log(`${title}: ${address}`)
   })
 
   function nameOf(signer: HardhatEthersSigner | string) {
@@ -226,6 +226,7 @@ async function transfer(
   await getSign(merch.id, by, to).then(async ({ signature, salt }) => {
     await merchandise.connect(by).acceptTransport(merch.id, signature)
     console.log(` - ${nameOf(by)} accept and sign the mandat: OK`)
+    console.log(`   # signature : ${signature}`)
     await merchandise.connect(to).validateTransport(merch.id, by, salt)
     console.log(` - ${nameOf(to)} validate delivery: OK`)
   })
